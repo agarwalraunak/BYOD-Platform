@@ -21,18 +21,18 @@ import javax.ws.rs.core.Response;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kerberos.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
-import com.kerberos.ActiveDirectory.IActiveDirectory;
-import com.kerberos.dateutil.IDateUtil;
 import com.kerberos.db.model.ServiceTicket;
 import com.kerberos.db.service.IServiceTicketService;
-import com.kerberos.encryption.IEncryptionUtil;
 import com.kerberos.exceptions.InvalidInputException;
 import com.kerberos.exceptions.ServiceUnavailableException;
-import com.kerberos.hashing.IHashUtil;
-import com.kerberos.keyserver.KeyServerUtil;
 import com.kerberos.rest.representation.AccessServiceResponse;
 import com.kerberos.rest.representation.KeyServerRequest;
+import com.kerberos.util.ActiveDirectory.IActiveDirectory;
+import com.kerberos.util.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
+import com.kerberos.util.dateutil.IDateUtil;
+import com.kerberos.util.encryption.IEncryptionUtil;
+import com.kerberos.util.hashing.IHashUtil;
+import com.kerberos.util.keyserver.KeyServerUtil;
 
 /**
  * @author raunak

@@ -23,11 +23,20 @@
 	
 	<context:component-scan base-package="com.*" />
 	
-	<beans:bean class="com.kerberos.service.config.applicationdetailservice.ApplicationDetailService">
+	<beans:bean class="com.service.config.applicationdetailservice.ApplicationDetailService">
 			<beans:constructor-arg name="appLoginName" value="ServiceSecurity" />
 			<beans:constructor-arg name="appPassword" value="testPassword" />
 	</beans:bean>
 	
-	<beans:import resource="beans.xml"/>
+	<beans:bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" >
+		<beans:property name="location" value="/WEB-INF/kerberosUrlConfig.properties"  />
+	</beans:bean>
 	
+	<beans:bean class="com.service.config.KerberosURLConfig">
+		<beans:constructor-arg name="kERBEROS_APP_AUTHENTICATION_URL"  value="${KERBEROS_APP_AUTHENTICATION_URL}"/>
+		<beans:constructor-arg name="kERBEROS_APP_SERVICE_TICKET_REQUEST_URL"  value="${KERBEROS_APP_SERVICE_TICKET_REQUEST_URL}"/>
+		<beans:constructor-arg name="kERBEROS_KEY_SERVER_KEY_REQUEST_URL"  value="${KERBEROS_KEY_SERVER_KEY_REQUEST_URL}"/>
+		<beans:constructor-arg name="lOGIN_SERVER_APP_AUTHENTICATION_URL" value="${LOGIN_SERVER_APP_AUTHENTICATION_URL}"/>
+		<beans:constructor-arg name="lOGIN_SERVER_USER_AUTHENTICATION_URL" value="${LOGIN_SERVER_USER_AUTHENTICATION_URL}"/>
+	</beans:bean>	
 </beans:beans>

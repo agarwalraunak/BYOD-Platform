@@ -7,12 +7,13 @@ package com.kerberos.rest.representation;
  * @author raunak
  *
  */
-public class ServiceTicketResponse {
+public class ServiceTicketResponse extends KerberosRequestRepresentation {
 
 	private String encServiceTicket;
 	private String encServiceSessionID;
 	private String encServiceName;
 	private String encAuthenticator;
+	private String encExpiryTime;
 	
 	/**
 	 * @return the encServiceTicket
@@ -62,5 +63,16 @@ public class ServiceTicketResponse {
 	public void setEncAuthenticator(String encAuthenticator) {
 		this.encAuthenticator = encAuthenticator;
 	}
-	
+	/**
+	 * @return the encExpiryTime
+	 */
+	public String getEncExpiryTime() {
+		return encExpiryTime;
+	}
+	/**
+	 * @param encExpiryTime the encExpiryTime to set
+	 */
+	public void setEncExpiryTime(String encExpiryTime) {
+		this.encExpiryTime = encExpiryTime;
+	}
 }

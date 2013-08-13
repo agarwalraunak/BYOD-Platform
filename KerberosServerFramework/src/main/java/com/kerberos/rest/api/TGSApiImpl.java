@@ -16,13 +16,13 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kerberos.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
-import com.kerberos.dateutil.IDateUtil;
 import com.kerberos.db.model.TGT;
 import com.kerberos.db.service.ITGTService;
-import com.kerberos.encryption.IEncryptionUtil;
-import com.kerberos.keyserver.KeyServerUtil;
 import com.kerberos.rest.representation.ServiceTicketResponse;
+import com.kerberos.util.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
+import com.kerberos.util.dateutil.IDateUtil;
+import com.kerberos.util.encryption.IEncryptionUtil;
+import com.kerberos.util.keyserver.KeyServerUtil;
 
 /**
  * @author raunak
@@ -183,10 +183,11 @@ public class TGSApiImpl implements ITGSApi{
 		Date responseAuthenticator = iDateUtil.createResponseAuthenticator(authenticator);
 		String responseAuthenticatorStr = iDateUtil.generateStringFromDate(responseAuthenticator);
 		
-		String[] encAttributes = iEncryptionUtil.encrypt(sessionKey, responseAuthenticatorStr, serviceSessionKey, serviceName);
+		String[] encAttributes = iEncryptionUtil.encrypt(sessionKey, responseAuthenticatorStr, serviceSessionKey, serviceName, serviceTicketExpiryString);
 		String encAuthenticator = encAttributes[0];
 		String encServiceSessionKey = encAttributes[1];
 		String encServiceName = encAttributes[2];
+		String encExpiryTime = encAttributes[3];
 		
 		ServiceTicketResponse response = new ServiceTicketResponse();
 		
@@ -194,6 +195,7 @@ public class TGSApiImpl implements ITGSApi{
 		response.setEncAuthenticator(encAuthenticator);
 		response.setEncServiceSessionID(encServiceSessionKey);
 		response.setEncServiceTicket(sessionEncServiceTicket);
+		response.setEncExpiryTime(encExpiryTime);
 		
 		return response;
 	}

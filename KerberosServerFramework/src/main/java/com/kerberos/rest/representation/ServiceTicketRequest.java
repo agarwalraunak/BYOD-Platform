@@ -8,7 +8,7 @@ package com.kerberos.rest.representation;
  * @author raunak
  *
  */
-public class ServiceTicketRequest {
+public class ServiceTicketRequest extends KerberosRequestRepresentation {
 	
 	private String encAppTgtPacket;
 	private String encServiceName;

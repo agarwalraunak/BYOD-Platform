@@ -23,15 +23,15 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.kerberos.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
-import com.kerberos.encryption.IEncryptionUtil;
 import com.kerberos.exceptions.InvalidInputException;
 import com.kerberos.exceptions.InvalidOutputException;
 import com.kerberos.exceptions.ServiceUnavailableException;
-import com.kerberos.keyserver.KeyServerUtil;
 import com.kerberos.rest.api.IAccessServiceAPI;
 import com.kerberos.rest.representation.AccessServiceResponse;
 import com.kerberos.rest.representation.KeyServerRequest;
+import com.kerberos.util.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
+import com.kerberos.util.encryption.IEncryptionUtil;
+import com.kerberos.util.keyserver.KeyServerUtil;
 
 /**
  * @author raunak

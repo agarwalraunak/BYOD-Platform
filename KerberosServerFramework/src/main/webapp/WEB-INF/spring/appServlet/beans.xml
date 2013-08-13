@@ -7,16 +7,16 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd">
 
 
-	<beans:bean class="com.kerberos.ActiveDirectory.ActiveDirectoryImpl" />
-	<beans:bean class="com.kerberos.dateutil.DateUtilImpl" />
-	<beans:bean class="com.kerberos.hashing.HashUtilImpl" />
-	<beans:bean class="com.kerberos.encryption.EncryptionUtilImpl" />
+	<beans:bean class="com.kerberos.util.ActiveDirectory.ActiveDirectoryImpl" />
+	<beans:bean class="com.kerberos.util.dateutil.DateUtilImpl" />
+	<beans:bean class="com.kerberos.util.hashing.HashUtilImpl" />
+	<beans:bean class="com.kerberos.util.encryption.EncryptionUtilImpl" />
 	
 	<beans:bean class="com.kerberos.rest.api.KDCApiImpl" />
 	<beans:bean class="com.kerberos.rest.api.TGSApiImpl" />
 	<beans:bean class="com.kerberos.rest.api.AccessServiceAPIImpl" />
 	
-	<beans:bean class="com.kerberos.keyserver.KeyServerUtil" />
+	<beans:bean class="com.kerberos.util.keyserver.KeyServerUtil" />
 
 
 </beans:beans>

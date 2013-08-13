@@ -9,7 +9,8 @@
 <h1>
 	Create New Secret Key  
 </h1>
-
+<a href="${pageContext.request.contextPath}/conf/home">Home</a>
+<p style="color: red">${requestScope.statusMessage}</p>
 <form:form commandName="secretKeyForm" method="post" >
 	<table>
 		<tr>

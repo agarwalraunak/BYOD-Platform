@@ -11,7 +11,7 @@
 	</appender>
 	
 	<!-- Application Loggers -->
-	<logger name="com.keberos.service">
+	<logger name="com.service">
 		<level value="info" />
 	</logger>
 	

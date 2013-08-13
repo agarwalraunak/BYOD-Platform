@@ -9,7 +9,8 @@
 <h1>
 	App/User Registration
 </h1>
-
+<a href="${pageContext.request.contextPath}/conf/home">Home</a>
+<p style="color: red">${requestScope.statusMessage}</p>
 <form:form commandName="registrationForm" method="post" >
 	<table>
 		<tr>

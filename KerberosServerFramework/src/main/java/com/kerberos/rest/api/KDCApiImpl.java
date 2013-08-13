@@ -19,16 +19,16 @@ import javax.naming.NamingException;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.kerberos.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
-import com.kerberos.ActiveDirectory.IActiveDirectory;
 import com.kerberos.configuration.KerberosConfigurationManager;
-import com.kerberos.dateutil.IDateUtil;
 import com.kerberos.db.model.TGT;
 import com.kerberos.db.service.ITGTService;
-import com.kerberos.encryption.IEncryptionUtil;
-import com.kerberos.hashing.IHashUtil;
-import com.kerberos.keyserver.KeyServerUtil;
 import com.kerberos.rest.representation.AuthenticationResponse;
+import com.kerberos.util.ActiveDirectory.IActiveDirectory;
+import com.kerberos.util.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
+import com.kerberos.util.dateutil.IDateUtil;
+import com.kerberos.util.encryption.IEncryptionUtil;
+import com.kerberos.util.hashing.IHashUtil;
+import com.kerberos.util.keyserver.KeyServerUtil;
 
 /**
  * @author raunak

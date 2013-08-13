@@ -20,22 +20,32 @@
 		<servlet-class>com.sun.jersey.spi.spring.container.servlet.SpringServlet</servlet-class>
 		<init-param>
 			<param-name>com.sun.jersey.config.property.packages</param-name>
-			<param-value>com.kerberos.service.rest.resource</param-value>
+			<param-value>com.service</param-value>
 		</init-param>
 		<init-param>
 			<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
 			<param-value>true</param-value>
 		</init-param>
-		<init-param>
+<!-- 		<init-param>
 			<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
-			<param-value>com.kerberos.service.interceptor.SessionManagementFilter</param-value>
-		</init-param>
+			<param-value>com.service.interceptor.SessionManagementFilter</param-value>
+		</init-param> -->
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>Kerberos Service Restful Services</servlet-name>
 		<url-pattern>/orange/*</url-pattern>
 	</servlet-mapping>
-
+	
+	<!-- <filter>
+		<filter-name>Session Management Filter</filter-name>
+		<filter-class>com.service.interceptor.ServiceSessionManagementInterceptor</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>Session Management Filter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping> -->
+		
+	
 
 	<!-- Processes application requests -->
 	<servlet>
@@ -50,7 +60,7 @@
 
 	<servlet-mapping>
 		<servlet-name>appServlet</servlet-name>
-		<url-pattern>/</url-pattern>
+		<url-pattern>/test/*</url-pattern>
 	</servlet-mapping>
 
 </web-app>

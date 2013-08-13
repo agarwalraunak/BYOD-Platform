@@ -20,18 +20,18 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.kerberos.ActiveDirectory.IActiveDirectory;
 import com.kerberos.configuration.KerberosConfigurationManager;
-import com.kerberos.dateutil.IDateUtil;
 import com.kerberos.db.model.TGT;
 import com.kerberos.db.service.ITGTService;
-import com.kerberos.encryption.IEncryptionUtil;
 import com.kerberos.exceptions.InvalidInputException;
 import com.kerberos.exceptions.InvalidOutputException;
-import com.kerberos.hashing.IHashUtil;
 import com.kerberos.rest.api.IKDCApi;
 import com.kerberos.rest.api.KDCApiImpl.TicketAttributes;
 import com.kerberos.rest.representation.AuthenticationResponse;
+import com.kerberos.util.ActiveDirectory.IActiveDirectory;
+import com.kerberos.util.dateutil.IDateUtil;
+import com.kerberos.util.encryption.IEncryptionUtil;
+import com.kerberos.util.hashing.IHashUtil;
 
 /**
  * @author raunak
@@ -64,7 +64,7 @@ public class KDCRestService {
 		log.debug("Entring the authenticateApp method");
 		
 		if (username == null || username.isEmpty()){
-			log.debug("Invalid username found!");
+			log.error("Invalid username found!");
 			throw new InvalidInputException("Username is not valid, can not be null or empty!", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
 		}
 		
@@ -72,12 +72,12 @@ public class KDCRestService {
 		try {
 			password = iKDCApi.fetchPassworkFromDirectoryForUsername(username);
 		} catch (InvalidAttributeValueException e) {
-			log.error("Error found in fetching password from Directory");
+			log.error("Request from unregistered user found");
 			e.printStackTrace();
-			throw new InvalidOutputException("Username is not valid, can not be null or empty!", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
+			throw new InvalidOutputException("Invalid username", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
 		}
 		if (password == null || password.isEmpty()){
-			throw new InvalidOutputException("No registered application found!", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
+			throw new InvalidOutputException("Invalid username", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
 		}
 
 		SecretKey passwordKey = null;

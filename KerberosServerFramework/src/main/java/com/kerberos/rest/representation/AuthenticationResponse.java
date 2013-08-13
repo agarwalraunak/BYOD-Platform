@@ -7,7 +7,7 @@ package com.kerberos.rest.representation;
  * @author raunak
  *
  */
-public class AuthenticationResponse {
+public class AuthenticationResponse extends KerberosRequestRepresentation {
 	
 	private String encTgtPacket;	//TGTPacket = loginName,sessionkey,expiryTimeStamp
 	private String encSessionKey;

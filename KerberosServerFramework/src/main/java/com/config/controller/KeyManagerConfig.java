@@ -20,8 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import com.config.forms.SecretKeyForm;
-import com.kerberos.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
-import com.kerberos.keyserver.KeyServerUtil;
+import com.kerberos.util.ActiveDirectory.ActiveDirectoryImpl.SecretKeyType;
+import com.kerberos.util.keyserver.KeyServerUtil;
 
 /**
  * @author raunak
@@ -43,15 +43,25 @@ public class KeyManagerConfig {
 	}
 
 	@RequestMapping(value="/key/new", method=RequestMethod.POST)
-	public void storeSecretKey(@ModelAttribute("secretKeyForm") SecretKeyForm secretKeyForm){
+	public String storeSecretKey(@ModelAttribute("secretKeyForm") SecretKeyForm secretKeyForm, ModelMap model){
 		
 		String uid = secretKeyForm.getAppUID();
 		String keyType = secretKeyForm.getKeyType();
+		
+		if (keyType == null || keyType.isEmpty()){
+			model.addAttribute("statusMessage", "Please select a key type");
+			return "secretKeyForm";
+		}
+		
 		try {
 			keyServerUtil.saveKeyToKeyStore(uid, SecretKeyType.valueOf(keyType));
+			model.addAttribute("statusMessage", "Registration Successfull");
 		} catch (InvalidAttributeValueException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			model.addAttribute("statusMessage", "Registration failed");
 		}
+		
+		return "secretKeyForm";
 	}
 }

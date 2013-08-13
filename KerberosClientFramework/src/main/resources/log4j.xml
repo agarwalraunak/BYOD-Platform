@@ -11,7 +11,7 @@
 	</appender>
 	
 	<!-- Application Loggers -->
-	<logger name="com.*">
+	<logger name="com.device">
 		<level value="info" />
 	</logger>
 	
