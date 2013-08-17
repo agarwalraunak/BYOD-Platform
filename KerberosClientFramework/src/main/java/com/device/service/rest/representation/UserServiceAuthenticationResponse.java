@@ -3,6 +3,7 @@
  */
 package com.device.service.rest.representation;
 
+
 /**
  * @author raunak
  *
@@ -11,6 +12,7 @@ public class UserServiceAuthenticationResponse {
 
 	private String encUserSessionID;			//Encrypted with App Session ID for the service being accessed
 	private String encResponseAuthenticator;	//Encrypted with App Session ID for the service being accessed
+	private String encExpiryTime;
 	/**
 	 * @return the encUserSessionID
 	 */
@@ -34,5 +36,17 @@ public class UserServiceAuthenticationResponse {
 	 */
 	public void setEncResponseAuthenticator(String encResponseAuthenticator) {
 		this.encResponseAuthenticator = encResponseAuthenticator;
+	}
+	/**
+	 * @return the encExpiryTime
+	 */
+	public String getEncExpiryTime() {
+		return encExpiryTime;
+	}
+	/**
+	 * @param encExpiryTime the encExpiryTime to set
+	 */
+	public void setEncExpiryTime(String encExpiryTime) {
+		this.encExpiryTime = encExpiryTime;
 	}
 }

@@ -13,6 +13,7 @@ public class AppAuthenticationResponse extends KerberosRequestRepresentation {
 	
 	private String encAppSessionID;					//Encrypted with Service Key
 	private String encResponseAuthenticator; 	//Encrypted using Kerberos Service Session ID
+	private String encExpiryTime;
 	/**
 	 * @return the encAppSessionID
 	 */
@@ -37,4 +38,17 @@ public class AppAuthenticationResponse extends KerberosRequestRepresentation {
 	public void setEncResponseAuthenticator(String encResponseAuthenticator) {
 		this.encResponseAuthenticator = encResponseAuthenticator;
 	}
+	/**
+	 * @return the encExpiryTime
+	 */
+	public String getEncExpiryTime() {
+		return encExpiryTime;
+	}
+	/**
+	 * @param encExpiryTime the encExpiryTime to set
+	 */
+	public void setEncExpiryTime(String encExpiryTime) {
+		this.encExpiryTime = encExpiryTime;
+	}
+	
 }

@@ -9,18 +9,14 @@ import java.util.Iterator;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
-import javax.management.InvalidAttributeValueException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.login.app.model.AppSessionDirectory;
 import com.login.kerberos.rest.api.KerberosAuthenticationAPIImpl.SecretKeyType;
 import com.login.kerberos.rest.representation.KeyServerResponse;
-import com.login.rest.exceptions.ServiceUnavailableException;
+import com.login.model.SessionDirectory;
 import com.login.util.dateutil.IDateUtil;
 import com.login.util.encryption.IEncryptionUtil;
 import com.login.util.hashing.IHashUtil;
@@ -37,17 +33,17 @@ public class KeyServerAPIImpl implements IKeyServerAPI{
 	private @Autowired IDateUtil iDateUtil;
 	private @Autowired IEncryptionUtil iEncryptionUtil;
 	private @Autowired IHashUtil iHashUtil;
-	private @Autowired AppSessionDirectory appSessionDirectory;
+	private @Autowired SessionDirectory sessionDirectory;
 	
 	
 	@Override
-	public KeyServerResponse processKeyServerResponse(KeyServerResponse response, Date requestAuthenticator, SecretKey serviceSessionKey) throws InvalidAttributeValueException{
+	public KeyServerResponse processKeyServerResponse(KeyServerResponse response, Date requestAuthenticator, SecretKey serviceSessionKey) {
 		
 		log.debug("Entering processResponse method");
 		
 		if (response == null || requestAuthenticator == null || serviceSessionKey == null){
 			log.error("Invalid input parameter to processResponse");
-			throw new InvalidAttributeValueException("Invalid input parameter to processResponse");
+			return null;
 		}
 		
 		String responseAuthenticatorStr = iEncryptionUtil.decrypt(serviceSessionKey, response.getEncResponseAuthenticator())[0];
@@ -78,33 +74,26 @@ public class KeyServerAPIImpl implements IKeyServerAPI{
 	}
 	
 	@Override 
-	public SecretKey getKeyFromResponseData(Map<String, String> responseData, SecretKey serviceSessionKey, SecretKeyType keyType) throws InvalidAttributeValueException, ServiceUnavailableException{
+	public SecretKey getKeyFromResponseData(Map<String, String> responseData, SecretKey serviceSessionKey, SecretKeyType keyType) {
 		
 		log.debug("Entering getKeyFromResponseData method");
 		
 		if (responseData == null || serviceSessionKey == null || keyType == null){
 			log.error("Invalid parameter provided in getKeyFromResponseData");
-			throw new InvalidAttributeValueException("Invalid parameter provided in getKeyFromResponseData");
+			return null;
 		}
 		
 		String serviceKeyStr = responseData.get(keyType.getValue());
 		if (serviceKeyStr == null){
 			log.error("Unable to get the key from key server");
-			throw new ServiceUnavailableException("Error processing the request. Please try again later", Response.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_HTML);
+			return null;
 		}
 		
-		String decServiceKeyStr = null;
-		try {
-			decServiceKeyStr = iEncryptionUtil.decrypt(serviceSessionKey, serviceKeyStr)[0];
-		} catch (InvalidAttributeValueException e) {
-			log.error("Error processing the request. Detailed Exception is attached below: \n"+e.getMessage());
-			e.printStackTrace();
-			throw new ServiceUnavailableException("Error processing the request. Please try again later", Response.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_HTML);
-		}
+		String decServiceKeyStr = iEncryptionUtil.decrypt(serviceSessionKey, serviceKeyStr)[0];
 		
 		if(decServiceKeyStr == null){
 			log.error("Error processing the request");
-			throw new ServiceUnavailableException("Error processing the request. Please try again later", Response.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_HTML);
+			return null;
 		}
 		
 		SecretKey serviceKey = iEncryptionUtil.generateSecretKeyFromBytes(iHashUtil.stringToByte(decServiceKeyStr));

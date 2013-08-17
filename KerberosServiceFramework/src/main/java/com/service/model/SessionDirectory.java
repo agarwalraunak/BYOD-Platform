@@ -3,6 +3,7 @@
  */
 package com.service.model;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +37,14 @@ public class SessionDirectory {
 		return kerberosAppSession;
 	}
 
+	
+	/**
+	 * @param kerberosAppSession the kerberosAppSession to set
+	 */
+	public void setKerberosAppSession(KerberosAppSession kerberosAppSession) {
+		this.kerberosAppSession = kerberosAppSession;
+	}
+
 	/**
 	 * @param sessionID
 	 * @param TGTPacket
@@ -59,16 +68,17 @@ public class SessionDirectory {
 	 * @param username
 	 * @return AppSession or null if the AppSession does not exist or input parameters are invalid
 	 */
-	public AppSession createAppSession(String serviceSessionID, String username) {
+	public AppSession createAppSession(String serviceSessionID, String username, String clientIP) {
 		
-		if (serviceSessionID == null || serviceSessionID.isEmpty() || username == null || username.isEmpty()){
+		if (serviceSessionID == null || serviceSessionID.isEmpty() || username == null || username.isEmpty() || clientIP == null || clientIP.isEmpty()){
 			return null;
 		}
 		
 		AppSession appSession = new AppSession();
-		appSession.setAppID(username);
+		appSession.setLoginName(username);
 		appSession.setKerberosServiceSessionID(serviceSessionID);
 		appSession.setSessionID(iHashUtil.getSessionKey());
+		appSession.setClientIP(clientIP);
 		
 		appSessionDirectory.put(username, appSession);
 		
@@ -79,13 +89,24 @@ public class SessionDirectory {
 	 * @param appID
 	 * @return
 	 */
-	public AppSession findAppSessionByAppID(String appID){
+	public AppSession findActiveAppSessionByAppID(String appID){
 		
 		if(appID == null){
 			return null;
 		}
 		
-		return appSessionDirectory.get(appID);
+		AppSession appSession = appSessionDirectory.get(appID);
+		
+		if (appSession != null){
+			//Check if the appSession active flag is true and if it has expired set Active flag to false
+			if (appSession.isActive() && appSession.getExpiryTime().before(new Date())){
+				appSession.setActive(false);
+			}
+			if (appSession.isActive())
+				return appSession;
+		}
+			
+		return null;
 	}
 
 }

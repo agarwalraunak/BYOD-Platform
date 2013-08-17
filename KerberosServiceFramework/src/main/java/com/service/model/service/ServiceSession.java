@@ -25,6 +25,10 @@ public class ServiceSession extends Session {
 
 	public ServiceSession() {
 		authenticators = new LinkedList<>();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(new Date());
+		calendar.add(Calendar.MINUTE, 2);
+		expiryTime = calendar.getTime();
 	}
 
 	/**
@@ -34,7 +38,6 @@ public class ServiceSession extends Session {
 		return authenticators;
 	}
 	
-
 	/**
 	 * @return
 	 */

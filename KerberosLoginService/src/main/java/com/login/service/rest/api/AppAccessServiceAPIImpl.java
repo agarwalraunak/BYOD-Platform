@@ -1,23 +1,18 @@
 package com.login.service.rest.api;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
-import javax.management.InvalidAttributeValueException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.login.app.model.AppSession;
-import com.login.app.model.AppSessionDirectory;
-import com.login.rest.exceptions.UnauthenticatedAppException;
-import com.login.rest.exceptions.UnauthenticatedRequestException;
+import com.login.exception.common.AuthenticatorValidationException;
+import com.login.exception.common.UnauthenticatedAppException;
+import com.login.model.SessionDirectory;
+import com.login.model.app.AppSession;
 import com.login.service.rest.representation.AppAccessServiceRequest;
 import com.login.service.rest.representation.AppAccessServiceResponse;
 import com.login.util.dateutil.IDateUtil;
@@ -28,61 +23,59 @@ public class AppAccessServiceAPIImpl implements IAppAccessServiceAPI{
 	
 	private static Logger log = Logger.getLogger(AppAccessServiceAPIImpl.class);
 	
-	private @Autowired AppSessionDirectory appSessionDirectory;
+	private @Autowired SessionDirectory sessionDirectory;
 	private @Autowired IEncryptionUtil iEncryptionUtil;
 	private @Autowired IDateUtil iDateUtil;
 	
-	@Override
-	public Map<String, String> processAppAccessServiceRequest(AppAccessServiceRequest request) throws InvalidAttributeValueException{
+	public Map<String, String> processAppAccessServiceRequest(AppAccessServiceRequest request) throws AuthenticatorValidationException, UnauthenticatedAppException{
 		
 		log.debug("Entering processAppAccessServiceRequest");
 		
 		if (request == null){
 			log.error("Invalid input parameter provided to processAppAccessServiceRequest");
-			throw new InvalidAttributeValueException("Invalid input parameter provided to processAppAccessServiceRequest");
+			throw new IllegalArgumentException("Invalid input parameter provided to processAppAccessServiceRequest");
 		}
 		
 		String appID = request.getAppID();
-		String encAppSessionID = request.getEncAppSessionID();
-		String encAuthenticator = request.getEncAuthenticator();
-		Map<String, String> encRequestData = request.getData();
 		
-		AppSession appSession = appSessionDirectory.findAppSessionByAppID(appID);
-		
+		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(appID);
 		//If the Session app does not exist throw an Unauthorized Exception
 		if (appSession == null){
 			log.error("Request from Unauthorized app found");
-			throw new UnauthenticatedAppException("Request from Unauthorized app found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
 		
-		String serviceSessionID = appSession.getAppServiceSessionID();
+		String serviceSessionID = appSession.getKerberosServiceSessionID();
 		SecretKey serviceSessionKey = iEncryptionUtil.generateSecretKey(serviceSessionID);
 		
 		//Using the Service Session Key to get the App Session ID
+		String encAppSessionID = request.getEncAppSessionID();
 		String decAppSessionID = iEncryptionUtil.decrypt(serviceSessionKey, encAppSessionID)[0];
 		if (!iEncryptionUtil.validateDecryptedAttributes(decAppSessionID)){
 			log.error("Request from Unauthorized app found");
-			throw new UnauthenticatedAppException("Request from Unauthorized app found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
 		
 		//Validate if the received AppSessionID is right
-		if (!decAppSessionID.equals(appSession.getAppSessionID())){
+		if (!decAppSessionID.equals(appSession.getSessionID())){
 			log.error("Request from Unauthorized app found");
-			throw new UnauthenticatedAppException("Request from Unauthorized app found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
 		
 		SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(decAppSessionID);
 		//Decrypt the Authenticator with the AppSessionKey
+		String encAuthenticator = request.getEncAuthenticator();
 		String requestAuthenticatorStr = iEncryptionUtil.decrypt(appSessionKey, encAuthenticator)[0];
 		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
 		//Validate the authenticator
 		if (!appSession.validateAuthenticator(requestAuthenticator)){
 			log.error("Invalid Authenticator found");
-			throw new UnauthenticatedRequestException("Unauthenticated request found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new AuthenticatorValidationException();
 		}
 		
 		//Decrypt the request data
-		Map<String, String> decData = decryptRequestData(encRequestData, appSessionKey);
+		Map<String, String> encRequestData = request.getData();
+		Map<String, String> decData = iEncryptionUtil.decrypt(appSessionKey, encRequestData);
 		
 		log.debug("Returning from processAppAccessServiceRequest");
 		
@@ -90,19 +83,19 @@ public class AppAccessServiceAPIImpl implements IAppAccessServiceAPI{
 	}
 	
 	@Override
-	public AppAccessServiceResponse generateAppAccessServiceResponse(AppAccessServiceRequest request, Map<String, String> responseData) throws InvalidAttributeValueException{
+	public AppAccessServiceResponse generateAppAccessServiceResponse(AppAccessServiceRequest request, Map<String, String> responseData) {
 		
 		if (request == null){
 			log.error("Invalid Input parameter provided to generateAppAccessServiceResponse");
-			throw new InvalidAttributeValueException("Invalid Input parameter provided to generateAppAccessServiceResponse");
+			throw new IllegalArgumentException("Invalid Input parameter provided to generateAppAccessServiceResponse");
 		}
 		
 		String appID = request.getAppID();
 		String encRequestAuthenticator = request.getEncAuthenticator();
 		
 		//Get the app session
-		AppSession appSession = appSessionDirectory.findAppSessionByAppID(appID);
-		String appSessionID = appSession.getAppSessionID();
+		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(appID);
+		String appSessionID = appSession.getSessionID();
 		//Generate key using the app session
 		SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(appSessionID);
 		
@@ -111,7 +104,7 @@ public class AppAccessServiceAPIImpl implements IAppAccessServiceAPI{
 		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
 		
 		//Encrypting the response data
-		Map<String, String> encResponseData = encryptResponseData(responseData, appSessionKey);
+		Map<String, String> encResponseData = iEncryptionUtil.encrypt(appSessionKey, responseData);
 		
 		//Creating the Response Authenticator
 		Date responseAuthenticator = iDateUtil.createResponseAuthenticator(requestAuthenticator);
@@ -130,58 +123,5 @@ public class AppAccessServiceAPIImpl implements IAppAccessServiceAPI{
 		log.debug("Returning from generateAppAccessServiceResponse");
 		
 		return response;
-	}
-	
-	public Map<String, String> encryptResponseData(Map<String, String> responseData, SecretKey appSessionKey) throws InvalidAttributeValueException{
-		
-		log.debug("Entering encryptResponseData");
-		
-		if (responseData == null || appSessionKey == null){
-			log.error("Invalid input parameter provided to encryptResponseData");
-			throw new InvalidAttributeValueException("Invalid input parameter provided to encryptResponseData");
-		}
-		
-		Map<String, String> encResponseData = null;
-		if (responseData.size() > 0){
-			Iterator<String> iterator = responseData.keySet().iterator();
-			encResponseData = new HashMap<>();
-			String key = null;
-			while(iterator.hasNext()){
-				key = iterator.next();
-				encResponseData.put(key, iEncryptionUtil.encrypt(appSessionKey, responseData.get(key))[0]);
-			}
-		}
-		
-		log.debug("Returning from encryptResponseData");
-		
-		return encResponseData;
-	}
-
-	/**
-	 * @param encRequestData
-	 * @param appSessionKey
-	 * @return
-	 * @throws InvalidAttributeValueException
-	 */
-	public Map<String, String> decryptRequestData(Map<String, String> encRequestData, SecretKey appSessionKey) throws InvalidAttributeValueException{
-		
-		log.debug("Entering decryptRequestData");
-		
-		if (encRequestData == null || appSessionKey == null){
-			log.error("Invalid Input parameter to decryptRequestData");
-			throw new InvalidAttributeValueException("Invalid Input parameter to decryptRequestData");
-		}
-		
-		Iterator<String> iterator = encRequestData.keySet().iterator();
-		String key = null;
-		Map<String, String> decData = new HashMap<>();
-		while(iterator.hasNext()){
-			key = iterator.next();
-			decData.put(key, iEncryptionUtil.decrypt(appSessionKey, encRequestData.get(key))[0]);
-		}
-		
-		log.debug("Returning from decryptRequestData");
-		
-		return decData;
-	}
+	}	
 }

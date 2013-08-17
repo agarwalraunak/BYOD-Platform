@@ -2,8 +2,8 @@ package com.login.service.rest.api;
 
 import java.util.Map;
 
-import javax.management.InvalidAttributeValueException;
-
+import com.login.exception.common.AuthenticatorValidationException;
+import com.login.exception.common.UnauthenticatedAppException;
 import com.login.service.rest.representation.AppAccessServiceRequest;
 import com.login.service.rest.representation.AppAccessServiceResponse;
 
@@ -15,20 +15,19 @@ public interface IAppAccessServiceAPI {
 	 * in the request template. 
 	 * @param request
 	 * @return
-	 * @throws InvalidAttributeValueException
+	 * @throws AuthenticatorValidationException 
+	 * @throws UnauthenticatedAppException 
 	 */
 	Map<String, String> processAppAccessServiceRequest(
 			AppAccessServiceRequest request)
-			throws InvalidAttributeValueException;
+			throws AuthenticatorValidationException, UnauthenticatedAppException;
 
 	/**
 	 * @param request
 	 * @param responseData
 	 * @return
-	 * @throws InvalidAttributeValueException
 	 */
 	AppAccessServiceResponse generateAppAccessServiceResponse(
-			AppAccessServiceRequest request, Map<String, String> responseData)
-			throws InvalidAttributeValueException;
+			AppAccessServiceRequest request, Map<String, String> responseData);
 
 }

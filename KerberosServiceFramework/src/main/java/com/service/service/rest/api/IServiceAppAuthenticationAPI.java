@@ -37,7 +37,7 @@ public interface IServiceAppAuthenticationAPI {
 	 * @return ServiceSession or null if the input is invalid or authenticator don't validate
 	 */
 	ServiceSession processAuthenticateAppResponse(String encAppSessionID,
-			String encResponseAuthenticator, Date requestAuthenticator,
+			String encResponseAuthenticator, String encExpiryTime, Date requestAuthenticator,
 			ServiceTicket serviceTicket, SecretKey serviceSessionKey);
 
 

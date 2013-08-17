@@ -71,10 +71,11 @@ public class ServiceTicket {
 		return created;
 	}
 	
-	public ServiceSession createServiceSession(String sessionID){
+	public ServiceSession createServiceSession(String sessionID, Date expiryTime){
 		
 		serviceSession = new ServiceSession();
 		serviceSession.setSessionID(sessionID);
+		serviceSession.setExpiryTime(expiryTime);
 		return serviceSession;
 	}
 	

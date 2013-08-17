@@ -5,10 +5,11 @@ package com.login.service.rest.api;
 
 import java.util.Map;
 
-import javax.management.InvalidAttributeValueException;
-
-import com.login.service.rest.representation.AccessServiceRequest;
-import com.login.service.rest.representation.AccessServiceResponse;
+import com.login.exception.common.AuthenticatorValidationException;
+import com.login.exception.common.UnauthenticatedAppException;
+import com.login.exception.common.UnauthenticatedUserException;
+import com.login.service.rest.representation.UserAccessServiceRequest;
+import com.login.service.rest.representation.UserAccessServiceResponse;
 
 /**
  * @author raunak
@@ -19,20 +20,23 @@ public interface IUserAccessServiceAPI {
 	/**
 	 * @param request
 	 * @return
-	 * @throws InvalidAttributeValueException
+	 * @throws AuthenticatorValidationException 
+	 * @throws UnauthenticatedAppException 
+	 * @throws UnauthenticatedUserException 
 	 */
-	Map<String, String> processAccessServiceRequest(AccessServiceRequest request)
-			throws InvalidAttributeValueException;
+	Map<String, String> processAccessServiceRequest(UserAccessServiceRequest request)
+			throws UnauthenticatedAppException, AuthenticatorValidationException, UnauthenticatedUserException;
 
 	/**
 	 * @param request
 	 * @param responseData
 	 * @return
-	 * @throws InvalidAttributeValueException
+	 * @throws UnauthenticatedAppException 
+	 * @throws UnauthenticatedUserException 
 	 */
-	AccessServiceResponse generateAccessServiceResponse(
-			AccessServiceRequest request, Map<String, String> responseData)
-			throws InvalidAttributeValueException;
+	UserAccessServiceResponse generateAccessServiceResponse(
+			UserAccessServiceRequest request, Map<String, String> responseData)
+			throws UnauthenticatedAppException, UnauthenticatedUserException;
 
 	
 }

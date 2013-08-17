@@ -78,7 +78,7 @@ public class DateUtilImpl implements IDateUtil {
 	 */
 	@Override
 	public boolean validateAuthenticator(Date authenticator, Date requestAuthenticator){
-		if (((new Date().getTime() - authenticator.getTime()) > 5000 * 60) && authenticator.getTime() - requestAuthenticator.getTime() != 60000) {
+		if (((new Date().getTime() - authenticator.getTime()) > 5000 * 60) || authenticator.getTime() - requestAuthenticator.getTime() != 60000) {
 			return false;
 		}
 		return true;

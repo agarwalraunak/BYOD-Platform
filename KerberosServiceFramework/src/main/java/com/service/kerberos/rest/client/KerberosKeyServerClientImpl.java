@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.service.config.KerberosURLConfig;
+import com.service.exception.RestClientException;
 import com.service.kerberos.rest.api.IKeyServerAPI;
 import com.service.kerberos.rest.api.KerberosAuthenticationAPIImpl.SecretKeyType;
 import com.service.kerberos.rest.representation.KeyServerRequest;
@@ -68,7 +69,7 @@ public class KerberosKeyServerClientImpl implements IKerberosKeyServerClient{
 		KeyServerResponse response;
 		try {
 			response = (KeyServerResponse) iConnectionManager.generateRequest(kerberosURLConfig.getKERBEROS_KEY_SERVER_KEY_REQUEST_URL(), RequestMethod.POST_REQUEST_METHOD, ContentType.APPLICATION_JSON, KeyServerResponse.class, iConnectionManager.generateJSONStringForObject(request));
-		} catch (IOException e) {
+		} catch (IOException|RestClientException e) {
 			e.printStackTrace();
 			return null;
 		}

@@ -5,8 +5,8 @@ package com.service.kerberos.rest.api;
 
 import java.util.Map;
 
+import com.service.exception.common.InternalSystemException;
 import com.service.kerberos.rest.api.KerberosAuthenticationAPIImpl.ServiceTicketResponseAttributes;
-import com.service.rest.exception.common.InternalSystemException;
 
 /**
  * @author raunak

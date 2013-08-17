@@ -4,12 +4,12 @@
 package com.login.kerberos.rest.api;
 
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
-import javax.management.InvalidAttributeValueException;
 
+import com.login.exception.ResponseDecryptionException;
+import com.login.exception.RestClientException;
 import com.login.kerberos.rest.api.KerberosAuthenticationAPIImpl.AuthenticationResponseAttributes;
 
 /**
@@ -24,20 +24,17 @@ public interface IKerberosAuthenticationAPI {
 	 * @param password
 	 * @param isApplication
 	 * @return
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidAttributeValueException
+	 * @throws IOException 
+	 * @throws ResponseDecryptionException 
+	 * @throws RestClientException 
 	 */
-	Map<AuthenticationResponseAttributes, String> authenticate(String url,	String loginName, String password, boolean isApplication)	throws IOException, NoSuchAlgorithmException, InvalidAttributeValueException;
+	Map<AuthenticationResponseAttributes, String> authenticate(String url,	String loginName, String password) throws IOException, RestClientException, ResponseDecryptionException, com.login.exception.RestClientException;
 
 	/**
 	 * @param loginAppName
 	 * @param appPassword
 	 * @return
-	 * @throws NoSuchAlgorithmException
-	 * @throws InvalidAttributeValueException
 	 */
 	SecretKey generatePasswordSymmetricKey(String loginAppName,
-			String appPassword) throws NoSuchAlgorithmException,
-			InvalidAttributeValueException;
+			String appPassword) ;
 }

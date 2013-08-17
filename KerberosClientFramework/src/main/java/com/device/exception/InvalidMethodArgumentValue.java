@@ -18,9 +18,9 @@ public class InvalidMethodArgumentValue extends RuntimeException {
 	/**
 	 * @param methodName
 	 */
-	public InvalidMethodArgumentValue(String methodName) {
-		super("Invalid Input parameter provided to "+methodName);
-		this.message = "Invalid Input parameter provided to "+methodName;
+	public InvalidMethodArgumentValue(String className, String methodName) {
+		super("Invalid Input parameter provided to "+className+"."+methodName);
+		this.message = "Invalid Input parameter provided to "+className+"."+methodName;
 	}
 
 	/**

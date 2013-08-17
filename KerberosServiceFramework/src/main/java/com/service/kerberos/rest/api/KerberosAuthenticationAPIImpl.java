@@ -14,8 +14,10 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.service.app.rest.representation.AppAuthenticationResponse;
+import com.service.exception.ResponseDecryptionException;
+import com.service.exception.RestClientException;
 import com.service.kerberos.rest.representation.AuthenticationResponse;
-import com.service.rest.exception.common.InternalSystemException;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.service.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
 import com.service.util.connectionmanager.IConnectionManager;
@@ -60,7 +62,7 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 	}	
 	
 	@Override
-	public Map<AuthenticationResponseAttributes, String> authenticate(String url, String loginName, String password, boolean isApplication) throws InternalSystemException{
+	public Map<AuthenticationResponseAttributes, String> authenticate(String url, String loginName, String password) throws IOException, RestClientException, ResponseDecryptionException {
 		
 		log.debug("Entering authenticate");
 		
@@ -71,13 +73,7 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 		String authenticationUrl = new StringBuilder(url).append(loginName).toString();
 		
 		AuthenticationResponse response;
-		try {
-			response = (AuthenticationResponse) iConnectionManager.generateRequest(authenticationUrl, RequestMethod.GET_REQUEST_METHOD, ContentType.TEXT_HTML, AuthenticationResponse.class);
-		} catch (IOException e) {
-			log.error("Error authenticating Service Application against kerberos");
-			e.printStackTrace();
-			throw new InternalSystemException();
-		}
+		response = (AuthenticationResponse) iConnectionManager.generateRequest(authenticationUrl, RequestMethod.GET_REQUEST_METHOD, ContentType.TEXT_HTML, AuthenticationResponse.class);
 		
 		if (response == null){
 			return null;
@@ -87,7 +83,7 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 	}
 
 	@Override
-	public SecretKey generatePasswordSymmetricKey(String loginAppName, String appPassword) throws InternalSystemException {
+	public SecretKey generatePasswordSymmetricKey(String loginAppName, String appPassword)  {
 		
 		log.debug("Entering generatePasswordSymmetricKey method");
 		
@@ -96,13 +92,13 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 			return null;
 		}
 		
-		byte[] hashedPasswordPhraseBytes = null;
+		byte[] hashedPasswordPhraseBytes;
 		try {
 			hashedPasswordPhraseBytes = iHashUtil.getHashWithSalt(appPassword, HashingTechqniue.SSHA256, iHashUtil.stringToByte(loginAppName));
 		} catch (NoSuchAlgorithmException e) {
-			log.error("Error generating Password Symmetric Key\n"+e.getMessage());
+			log.error("Error generating SecretKey for Kerberos Authentication");
 			e.printStackTrace();
-			throw new InternalSystemException();
+			return null;
 		}
 		String hashPasswordPhrase = iHashUtil.bytetoString(hashedPasswordPhraseBytes);
 		SecretKey passwordSymmetricKey = iEncryptionUtil.generateSecretKey(hashPasswordPhrase);
@@ -112,13 +108,17 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 		return passwordSymmetricKey;
 	}
 	
-	public Map<AuthenticationResponseAttributes, String> decryptAuthenticationResponse(AuthenticationResponse response, SecretKey key) {
+	public Map<AuthenticationResponseAttributes, String> decryptAuthenticationResponse(AuthenticationResponse response, SecretKey key) throws ResponseDecryptionException {
 		
 		log.debug("Entering decryptAuthenticationResponse");
+		if (response == null || key == null){
+			log.error("Illegal Arguments provided to decryptAuthenticationResponse");
+			throw new IllegalArgumentException("Illegal Arguments provided to decryptAuthenticationResponse");
+		}
 		
 		String[] decryptedData = iEncryptionUtil.decrypt(key, response.getEncTgtPacket(), response.getEncSessionKey(), response.getEncLoginName());
 		if (decryptedData == null){
-			return null;
+			throw new ResponseDecryptionException(AppAuthenticationResponse.class, "decryptAuthenticationResponse", getClass());
 		}
 		String tgtPacket = decryptedData[0];
 		String sessionKey = decryptedData[1];
@@ -135,7 +135,7 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 		return responseAttributes;
 	}
 	
-	public Map<AuthenticationResponseAttributes, String> processAuthenticationResponse(String loginAppName, String appPassword, AuthenticationResponse response) throws InternalSystemException {
+	public Map<AuthenticationResponseAttributes, String> processAuthenticationResponse(String loginAppName, String appPassword, AuthenticationResponse response) throws ResponseDecryptionException   {
 
 		log.debug("Entering processAuthenticationResponse method");
 		

@@ -3,16 +3,17 @@
  */
 package com.login.app.rest.representation;
 
-import com.login.rest.representation.KerberosRequestRepresentation;
+import com.login.rest.representation.RestServiceResponse;
+
 
 /**
  * @author raunak
  *
  */
-public class AppAuthenticationResponse extends KerberosRequestRepresentation {
+public class AppAuthenticationResponse extends RestServiceResponse{
 	
 	private String encAppSessionID;					//Encrypted with Service Key
-	private String encResponseAuthenticator; 	//Encrypted using Kerberos Service Session ID
+	private String encExpiryTime;
 	/**
 	 * @return the encAppSessionID
 	 */
@@ -26,15 +27,16 @@ public class AppAuthenticationResponse extends KerberosRequestRepresentation {
 		this.encAppSessionID = encAppSessionID;
 	}
 	/**
-	 * @return the encResponseAuthenticator
+	 * @return the encExpiryTime
 	 */
-	public String getEncResponseAuthenticator() {
-		return encResponseAuthenticator;
+	public String getEncExpiryTime() {
+		return encExpiryTime;
 	}
 	/**
-	 * @param encResponseAuthenticator the encResponseAuthenticator to set
+	 * @param encExpiryTime the encExpiryTime to set
 	 */
-	public void setEncResponseAuthenticator(String encResponseAuthenticator) {
-		this.encResponseAuthenticator = encResponseAuthenticator;
+	public void setEncExpiryTime(String encExpiryTime) {
+		this.encExpiryTime = encExpiryTime;
 	}
+	
 }

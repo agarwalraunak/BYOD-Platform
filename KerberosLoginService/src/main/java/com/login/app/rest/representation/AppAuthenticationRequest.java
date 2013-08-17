@@ -1,11 +1,14 @@
 package com.login.app.rest.representation;
 
-import com.login.rest.representation.KerberosRequestRepresentation;
+import com.login.rest.representation.RestServiceRequest;
 
-public class AppAuthenticationRequest extends KerberosRequestRepresentation {
+/**
+ * @author raunak
+ *
+ */
+public class AppAuthenticationRequest extends RestServiceRequest {
 
 	private String serviceTicketPacket;
-	private String encAuthenticator;			//Encrypted with Kerberos Service Session ID
 	/**
 	 * @return the serviceTicketPacket
 	 */
@@ -18,19 +21,4 @@ public class AppAuthenticationRequest extends KerberosRequestRepresentation {
 	public void setServiceTicketPacket(String serviceTicketPacket) {
 		this.serviceTicketPacket = serviceTicketPacket;
 	}
-	/**
-	 * @return the encAuthenticator
-	 */
-	public String getEncAuthenticator() {
-		return encAuthenticator;
-	}
-	/**
-	 * @param encAuthenticator the encAuthenticator to set
-	 */
-	public void setEncAuthenticator(String encAuthenticator) {
-		this.encAuthenticator = encAuthenticator;
-	}
-	
-	
-	
 }

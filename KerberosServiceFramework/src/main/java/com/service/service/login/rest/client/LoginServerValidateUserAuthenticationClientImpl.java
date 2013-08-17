@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
+import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,9 @@ import org.springframework.stereotype.Component;
 
 import com.service.config.KerberosURLConfig;
 import com.service.config.applicationdetailservice.ApplicationDetailService;
+import com.service.exception.RestClientException;
+import com.service.exception.common.InternalSystemException;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.InternalSystemException;
 import com.service.service.login.rest.representation.ServiceValidateUserAuthenticationRequest;
 import com.service.service.login.rest.representation.ServiceValidateUserAuthenticationResponse;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
@@ -33,6 +35,8 @@ public class LoginServerValidateUserAuthenticationClientImpl implements ILoginSe
 	
 	private static Logger log = Logger.getLogger(LoginServerValidateUserAuthenticationClientImpl.class);
 	
+	
+	
 	private @Autowired IEncryptionUtil iEncryptionUtil;
 	private @Autowired IDateUtil iDateUtil;
 	private @Autowired ApplicationDetailService applicationDetailService;
@@ -40,7 +44,7 @@ public class LoginServerValidateUserAuthenticationClientImpl implements ILoginSe
 	private @Autowired KerberosURLConfig kerberosURLConfig;
 
 	@Override
-	public boolean validateUserAuthenticationAgainstLoginServer(ServiceSession appLoginServerSession, String userLoginServiceSession) throws InternalSystemException {
+	public boolean validateUserAuthenticationAgainstLoginServer(ServiceSession appLoginServerSession, String kerberosServiceSessionID, String userLoginServiceSession) throws InternalSystemException {
 		
 		log.debug("Entering validateUserAuthenticationAgainstLoginServer");
 		
@@ -63,6 +67,7 @@ public class LoginServerValidateUserAuthenticationClientImpl implements ILoginSe
 		//Creating Request
 		ServiceValidateUserAuthenticationRequest request = new ServiceValidateUserAuthenticationRequest();
 		request.setAppID(applicationDetailService.getAppLoginName());
+		request.setEncAppSessionID(iEncryptionUtil.encrypt(iEncryptionUtil.generateSecretKey(kerberosServiceSessionID), appLoginSessionID)[0]);
 		request.setEncAuthenticator(encryptedData[0]);
 		request.setEncUserLoginSessionID(encryptedData[1]);
 		
@@ -76,6 +81,12 @@ public class LoginServerValidateUserAuthenticationClientImpl implements ILoginSe
 		} catch (IOException e) {
 			log.error("Failed to validate user login against Login Server");
 			e.printStackTrace();
+			throw new InternalSystemException();
+		} catch (RestClientException e) {
+			e.printStackTrace();
+			if (e.getErrorCode() == Response.Status.UNAUTHORIZED.getStatusCode()){
+				appLoginServerSession.setActive(false);
+			}
 			throw new InternalSystemException();
 		}
 

@@ -1,8 +1,8 @@
 package com.service.service.rest.client;
 
+import com.service.exception.common.InternalSystemException;
 import com.service.model.kerberos.ServiceTicket;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.InternalSystemException;
 
 public interface IServiceAppAuthenticationClient {
 

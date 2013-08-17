@@ -31,8 +31,16 @@ public class ServiceTicket {
 	/**
 	 * @return the appSession
 	 */
-	public AppSession getAppSession() {
-		return appSession;
+	public AppSession getActiveAppSession() {
+		if (appSession != null && appSession.isActive()){
+			if (appSession.getExpiryTime().before(new Date())){
+				appSession.setActive(false);
+			}
+			else{
+				return appSession;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -69,23 +77,12 @@ public class ServiceTicket {
 	public Date getCreated() {
 		return created;
 	}
-	/**
-	 * @return the appServiceSession
-	 */
-	public AppSession getAppServiceSession() {
-		return appSession;
-	}
-	/**
-	 * @param appSession the appServiceSession to set
-	 */
-	public void setAppServiceSession(AppSession appSession) {
-		this.appSession = appSession;
-	}
 	
-	public AppSession createAppServiceSession(String appSessionID){
+	public AppSession createAppServiceSession(String appSessionID, Date expiryTime){
 		
 		appSession = new AppSession();
 		appSession.setSessionID(appSessionID);
+		appSession.setExpiryTime(expiryTime);
 		return appSession;
 	}
 	

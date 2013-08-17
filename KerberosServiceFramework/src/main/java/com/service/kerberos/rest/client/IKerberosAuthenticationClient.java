@@ -3,8 +3,12 @@
  */
 package com.service.kerberos.rest.client;
 
+import java.io.IOException;
+
+import com.service.exception.ApplicationDetailServiceUninitializedException;
+import com.service.exception.ResponseDecryptionException;
+import com.service.exception.RestClientException;
 import com.service.model.kerberos.KerberosAppSession;
-import com.service.rest.exception.common.InternalSystemException;
 
 /**
  * @author raunak
@@ -13,9 +17,14 @@ import com.service.rest.exception.common.InternalSystemException;
 public interface IKerberosAuthenticationClient {
 
 	/**
-	 * @return KerberosAppSession 
-	 * @throws InternalSystemException
+	 * @return
+	 * @throws IOException
+	 * @throws RestClientException
+	 * @throws ResponseDecryptionException
+	 * @throws ApplicationDetailServiceUninitializedException
 	 */
-	KerberosAppSession kerberosAuthentication() throws InternalSystemException;
+	KerberosAppSession kerberosAuthentication() throws IOException, RestClientException,
+			ResponseDecryptionException,
+			ApplicationDetailServiceUninitializedException;
 
 }

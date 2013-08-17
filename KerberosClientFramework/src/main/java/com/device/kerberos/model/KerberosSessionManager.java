@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class KerberosSessionManager {
 
-	private KerberosAppSession appSession;
+	private KerberosAppSession kerberosAppSession;
 
 	/**
 	 * @return the appSession
 	 */
-	public KerberosAppSession getAppSession() {
-		return appSession;
+	public KerberosAppSession getKerberosAppSession() {
+		return kerberosAppSession;
 	}
 
 	/**
@@ -33,10 +33,10 @@ public class KerberosSessionManager {
 			return null;
 		}
 		
-		appSession = new KerberosAppSession();
-		appSession.setSessionID(sessionID);
-		appSession.setTgt(new TGT(TGTPacket));
+		kerberosAppSession = new KerberosAppSession();
+		kerberosAppSession.setSessionID(sessionID);
+		kerberosAppSession.setTgt(new TGT(TGTPacket));
 		
-		return appSession;
+		return kerberosAppSession;
 	}	
 }

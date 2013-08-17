@@ -1,5 +1,6 @@
 package com.kerberos.db.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -69,6 +70,11 @@ public class ServiceTicketDAOImpl implements IServiceTicketDAO{
 						ticket.setActive(false);
 						session.update(ticket);
 					}
+				}
+				if (serviceTicket.getExpiresOn().before(new Date())){
+					serviceTicket.setActive(false);
+					session.update(serviceTicket);
+					serviceTicket = null;
 				}
 			}
 		} catch (Exception e) {

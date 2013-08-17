@@ -15,6 +15,8 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.google.gson.Gson;
+import com.service.error.ErrorResponse;
+import com.service.exception.RestClientException;
 
 /**
  * @author raunak
@@ -92,8 +94,9 @@ public class ConnectionManagerImpl implements IConnectionManager {
 	 * @param representation
 	 * @return
 	 * @throws IOException
+	 * @throws RestClientException 
 	 */
-	public Object fillGsonWithResponse(HttpURLConnection conn, Class<?> representation) throws IOException{
+	public Object fillGsonWithResponse(HttpURLConnection conn, Class<?> representation) throws IOException, RestClientException{
 		
 		log.debug("Entering fillGsonWithResponse method");
 		
@@ -114,7 +117,8 @@ public class ConnectionManagerImpl implements IConnectionManager {
 			}
 			error = errorBuilder.toString();
 			log.error("Error Code"+conn.getResponseCode()+"\t"+error);
-			throw new IOException(error);
+			ErrorResponse response = gson.fromJson(error, ErrorResponse.class);
+			throw new RestClientException(response);
 		}
 		InputStream is = conn.getInputStream();
 
@@ -136,9 +140,10 @@ public class ConnectionManagerImpl implements IConnectionManager {
 	 * @param input
 	 * @return Object response
 	 * @throws IOException
+	 * @throws RestClientException 
 	 */
 	@Override
-	public Object generateRequest(String url, RequestMethod requestMethod, ContentType contentType, Class<?> representation, String... input) throws IOException{
+	public Object generateRequest(String url, RequestMethod requestMethod, ContentType contentType, Class<?> representation, String... input) throws IOException, RestClientException{
 		
 		log.debug("Entering generateRequest method");
 		

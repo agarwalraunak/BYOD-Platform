@@ -10,9 +10,9 @@ import javax.management.InvalidAttributeValueException;
 
 import com.service.app.rest.representation.UserServiceAuthenticationRequest;
 import com.service.app.rest.representation.UserServiceAuthenticationResponse;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.InvalidRequestException;
 import com.service.model.app.AppSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
-import com.service.rest.exception.common.InvalidRequestException;
 
 /**
  * @author raunak

@@ -3,14 +3,17 @@
  */
 package com.service.app.rest.resource;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.log4j.Logger;
@@ -26,6 +29,15 @@ import com.service.app.rest.representation.UserServiceAuthenticationRequest;
 import com.service.app.rest.representation.UserServiceAuthenticationResponse;
 import com.service.config.KerberosURLConfig;
 import com.service.config.ServiceListConfig;
+import com.service.exception.ApplicationDetailServiceUninitializedException;
+import com.service.exception.ResponseDecryptionException;
+import com.service.exception.RestClientException;
+import com.service.exception.AppAuthenticationRestService.DecryptedServiceTicketPacketValidationException;
+import com.service.exception.AppAuthenticationRestService.DecryptionServiceTicketPacketException;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.InternalSystemException;
+import com.service.exception.common.InvalidRequestException;
+import com.service.exception.common.UnauthenticatedAppException;
 import com.service.kerberos.rest.api.KerberosAuthenticationAPIImpl.SecretKeyType;
 import com.service.kerberos.rest.client.IKerberosAuthenticationClient;
 import com.service.kerberos.rest.client.IKerberosKeyServerClient;
@@ -36,12 +48,6 @@ import com.service.model.app.UserSession;
 import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.kerberos.ServiceTicket;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.AppAuthenticationRestService.DecryptedServiceTicketPacketValidationException;
-import com.service.rest.exception.AppAuthenticationRestService.DecryptionServiceTicketPacketException;
-import com.service.rest.exception.common.AuthenticatorValidationException;
-import com.service.rest.exception.common.InternalSystemException;
-import com.service.rest.exception.common.InvalidRequestException;
-import com.service.rest.exception.common.UnauthenticatedAppException;
 import com.service.service.login.rest.client.ILoginServerValidateUserAuthenticationClient;
 import com.service.service.rest.client.IServiceAppAuthenticationClient;
 import com.service.util.dateutil.IDateUtil;
@@ -88,12 +94,22 @@ public class AuthenticationRestService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public AppAuthenticationResponse authenticateApp(AppAuthenticationRequest request) throws InternalSystemException, DecryptionServiceTicketPacketException, DecryptedServiceTicketPacketValidationException, AuthenticatorValidationException {
+	public AppAuthenticationResponse authenticateApp(AppAuthenticationRequest request, @Context HttpServletRequest httpRequest) throws InternalSystemException, 
+	DecryptionServiceTicketPacketException, DecryptedServiceTicketPacketValidationException, AuthenticatorValidationException {
 		
 		log.debug("Entering authenticateApp method");
 		
 		//Authenticate the Service Application
-		KerberosAppSession kerberosAppSession = iKerberosAuthenticationClient.kerberosAuthentication();
+		KerberosAppSession kerberosAppSession;
+		try {
+			kerberosAppSession = iKerberosAuthenticationClient.kerberosAuthentication();
+		} catch (IOException | RestClientException
+				| ResponseDecryptionException
+				| ApplicationDetailServiceUninitializedException e) {
+			log.error("Error performing kerberos authentication\n"+e.getMessage());
+			e.printStackTrace();
+			throw new InternalSystemException();
+		}
 		if (kerberosAppSession == null){
 			log.error("Kerberos Authentication of the System failed!");
 			throw new InternalSystemException();
@@ -115,24 +131,23 @@ public class AuthenticationRestService {
 		}
 		
 		String encServiceTicketPacket = request.getServiceTicketPacket();
-		String encAuthenticator = request.getEncAuthenticator();
-		
 		//Decrypt the Service Ticket Packet
 		 Map<ServiceTicketAttributes, String> decryptedServiceTicketPacket = iAppAuthenticationAPI.decryptServiceTicketPacket(encServiceTicketPacket, serviceKey);
 		 if (decryptedServiceTicketPacket == null){
 			 throw new DecryptionServiceTicketPacketException();
 		 }
 		 
-		String username = decryptedServiceTicketPacket.get(ServiceTicketAttributes.USERNAME);
+		String appLoginName = decryptedServiceTicketPacket.get(ServiceTicketAttributes.APP_LOGIN_NAME);
 		String serviceSessionID = decryptedServiceTicketPacket.get(ServiceTicketAttributes.SERVICE_SESSION_ID);
 		String serviceTicketExpirationString = decryptedServiceTicketPacket.get(ServiceTicketAttributes.SERVICE_TICKET_EXPIRATION_TIME_STR);
 		
 		//Validating the Decrypted Service Ticket Packet
-		if (!iAppAuthenticationAPI.validateServiceTicket(username, serviceSessionID, serviceTicketExpirationString)){
+		if (!iAppAuthenticationAPI.validateServiceTicket(appLoginName, serviceSessionID, serviceTicketExpirationString)){
 			log.error("Validation of Decrypted Service Ticket Packet failed!");
 			throw new DecryptedServiceTicketPacketValidationException();
 		}
 		
+		String encAuthenticator = request.getEncAuthenticator();
 		//Decrypt the Authenticator
 		SecretKey serviceSessionKey = iEncryptionUtil.generateSecretKey(serviceSessionID);
 		String requestAuthenticatorStr = iEncryptionUtil.decrypt(serviceSessionKey, encAuthenticator)[0];
@@ -144,9 +159,9 @@ public class AuthenticationRestService {
 		}
 		
 		//Check if the session for the application already exists else create
-		AppSession appSession = sessionDirectory.findAppSessionByAppID(username);
+		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(appLoginName);
 		if (appSession == null){
-			appSession = sessionDirectory.createAppSession(serviceSessionID, username);
+			appSession = sessionDirectory.createAppSession(serviceSessionID, appLoginName, httpRequest.getRemoteAddr());
 		}
 		//Add the authenticator to the App Session
 		appSession.addAuthenticator(requestAuthenticator);
@@ -156,6 +171,8 @@ public class AuthenticationRestService {
 
 		return response;
 	}
+	
+	
 	
 	/**
 	 * This rest service validates the user authentication by looking up if the Service already has User Session created.
@@ -172,78 +189,47 @@ public class AuthenticationRestService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public UserServiceAuthenticationResponse userServiceAuthentication(UserServiceAuthenticationRequest request) throws InvalidRequestException, UnauthenticatedAppException, AuthenticatorValidationException, InternalSystemException{
-		
+	public UserServiceAuthenticationResponse userServiceAuthentication(UserServiceAuthenticationRequest request, @Context HttpServletRequest httpRequest) throws InvalidRequestException, UnauthenticatedAppException, AuthenticatorValidationException, InternalSystemException{
+
 		log.debug("Entering userServiceAuthentication");
 		
 		String appLoginName = request.getAppID();
-		String encAuthenticator = request.getEncAuthenticator();
-		String encUserLoginServerSessionID = request.getEncUserSessionID();
-		String encUsername = request.getEncUsername();
-		
-		//Validating the attributes of the request
-		if (!iEncryptionUtil.validateDecryptedAttributes(appLoginName, encAuthenticator, encUserLoginServerSessionID, encUsername)){
-			log.error("Invalid User Service Authentication Request");
-			throw new InvalidRequestException();				
-		}
+		String userLoginServerSessionID = request.getEncUserSessionID();
+		String username = request.getEncUsername();
 		
 		//Find the App Session
-		AppSession appSession = sessionDirectory.findAppSessionByAppID(appLoginName);
-		//If session does not exist throw an exception
-		if (appSession == null){
-			log.error("Couldn't find a session for the given App Login Name. Request from an Unauthenticated App");
-			throw new UnauthenticatedAppException();
-		}
-		
-		//Generating appSessionKey using the App Session ID
-		SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(appSession.getSessionID());
-		
-		//Decrypt and validate the request parameters
-		String[] requestParams = iUserAuthenticationAPI.decrytAndValidateUserServiceAuthenticationRequestParameters(appSession, appSessionKey, request);
-		
-		String username = requestParams[0];
-		String userLoginServerSessionID = requestParams[1];
-		String requestAuthenticatorStr = requestParams[2];
-		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
-		
+		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(appLoginName);
 		//Check if the User already has a session or not
-		UserSession userSession = appSession.findUserSessionByUsername(username);
-		//If Session Exists send the old session id
-		if (userSession != null){
-			//If users is authenticated generate a session id
-			String userSessionID = userSession.getSessionID();
-			UserServiceAuthenticationResponse response = null;
-			response = iUserAuthenticationAPI.generateUserServiceAuthenticationResponse(requestAuthenticator, userSessionID, appSessionKey, appSession);
-			if (response == null){
-				log.error("Error generating UserServiceAuthenticationResponse");
+		UserSession userSession = appSession.findActiveUserSessionByUsername(username);		
+		if (userSession == null){
+			//If Session Does not exist validate the user authentication against Login Server
+			//Get the service ticket for login server
+			KerberosAppSession kerberosAppSession;
+			try {
+				kerberosAppSession = iKerberosAuthenticationClient.kerberosAuthentication();
+			} catch (IOException | RestClientException | ResponseDecryptionException| ApplicationDetailServiceUninitializedException e) {
+				log.error("Error performing kerberos authentication\n"+e.getMessage());
+				e.printStackTrace();
 				throw new InternalSystemException();
 			}
-			return response;
-		}
-
-		//If Session Does not exist validate the user authentication against Login Server
-		//Get the service ticket for login server
-		KerberosAppSession kerberosAppSession = iKerberosAuthenticationClient.kerberosAuthentication();
-		ServiceTicket loginServiceTicket = iKerberosServiceTicketClient.getServiceTicketForApp(ServiceListConfig.LOGIN_SERVER.getValue(), kerberosAppSession);
-		//Get the Service Session for login server
-		ServiceSession loginServiceSession = iServiceAppAuthenticationClient.authenticateAppServiceTicket(kerberosURLConfig.getLOGIN_SERVER_APP_AUTHENTICATION_URL(), loginServiceTicket);
-		
-		//Validate if user is authenticated against login server
-		boolean isAuthenticated = iLoginServerValidateUserAuthenticationClient.validateUserAuthenticationAgainstLoginServer(loginServiceSession, userLoginServerSessionID);
-		
-		//If users is authenticated create a session
-		String userSessionID = null;
-		if (isAuthenticated){
-			userSessionID = iHashUtil.getSessionKey();
-			appSession.createUserSession(username, userSessionID);
-		}
-		UserServiceAuthenticationResponse response = null;
-		response = iUserAuthenticationAPI.generateUserServiceAuthenticationResponse(requestAuthenticator, userSessionID, appSessionKey, appSession);
-		if (response == null){
-			log.error("Error generating UserServiceAuthenticationResponse");
-			throw new InternalSystemException();
+			ServiceTicket loginServiceTicket = iKerberosServiceTicketClient.getServiceTicketForApp(ServiceListConfig.LOGIN_SERVER.getValue(), kerberosAppSession);
+			//Get the Service Session for login server
+			ServiceSession loginServiceSession = iServiceAppAuthenticationClient.authenticateAppServiceTicket(kerberosURLConfig.getLOGIN_SERVER_APP_AUTHENTICATION_URL(), loginServiceTicket);
+			
+			//Validate if user is authenticated against login server
+			boolean isAuthenticated = iLoginServerValidateUserAuthenticationClient.validateUserAuthenticationAgainstLoginServer(loginServiceSession, loginServiceTicket.getServiceSessionID(), userLoginServerSessionID);
+			
+			//If users is authenticated create a session
+			if (isAuthenticated){
+				userSession = appSession.createUserSession(username, iHashUtil.getSessionKey(), httpRequest.getRemoteAddr());
+			}
 		}
 		
+		UserServiceAuthenticationResponse response = new UserServiceAuthenticationResponse();
+		if (userSession != null){
+			response.setEncUserSessionID(userSession.getSessionID());
+			response.setEncExpiryTime(iDateUtil.generateStringFromDate(userSession.getExpiryTime()));
+		}
 		return response;
 	}
 	

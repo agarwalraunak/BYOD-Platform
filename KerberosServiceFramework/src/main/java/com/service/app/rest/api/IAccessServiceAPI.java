@@ -5,11 +5,11 @@ package com.service.app.rest.api;
 
 import java.util.Map;
 
-import com.service.app.rest.representation.AccessServiceRequest;
-import com.service.app.rest.representation.AccessServiceResponse;
-import com.service.rest.exception.common.AuthenticatorValidationException;
-import com.service.rest.exception.common.UnauthenticatedAppException;
-import com.service.rest.exception.common.UnauthenticatedUserException;
+import com.service.app.rest.representation.UserAccessServiceRequest;
+import com.service.app.rest.representation.UserAccessServiceResponse;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.UnauthenticatedAppException;
+import com.service.exception.common.UnauthenticatedUserException;
 
 /**
  * @author raunak
@@ -24,7 +24,7 @@ public interface IAccessServiceAPI {
 	 * @throws UnauthenticatedUserException 
 	 * @throws AuthenticatorValidationException 
 	 */
-	Map<String, String> processAccessServiceRequest(AccessServiceRequest request)
+	Map<String, String> processAccessServiceRequest(UserAccessServiceRequest request)
 			throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException;
 
 	/**
@@ -32,8 +32,8 @@ public interface IAccessServiceAPI {
 	 * @param responseData
 	 * @return AccessServiceResponse or null in case invalid input parameter
 	 */
-	AccessServiceResponse generateAccessServiceResponse(
-			AccessServiceRequest request, Map<String, String> responseData);
+	UserAccessServiceResponse generateAccessServiceResponse(
+			UserAccessServiceRequest request, Map<String, String> responseData);
 
 	
 }

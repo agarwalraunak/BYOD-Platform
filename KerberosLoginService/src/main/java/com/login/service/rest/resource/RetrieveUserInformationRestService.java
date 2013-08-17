@@ -6,22 +6,22 @@ package com.login.service.rest.resource;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.management.InvalidAttributeValueException;
 import javax.naming.NamingException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.login.rest.exceptions.InvalidInputException;
-import com.login.rest.exceptions.InvalidRequestException;
-import com.login.rest.exceptions.ServiceUnavailableException;
+import com.login.exception.common.AuthenticatorValidationException;
+import com.login.exception.common.InternalSystemException;
+import com.login.exception.common.InvalidRequestException;
+import com.login.exception.common.UnauthenticatedAppException;
+import com.login.exception.common.UserDoesNotExistException;
 import com.login.service.rest.api.IAppAccessServiceAPI;
 import com.login.service.rest.representation.AppAccessServiceRequest;
 import com.login.service.rest.representation.AppAccessServiceResponse;
@@ -44,22 +44,17 @@ public class RetrieveUserInformationRestService {
 	@Path("/user/information")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public AppAccessServiceResponse getUserInformation(AppAccessServiceRequest request){
+	public AppAccessServiceResponse getUserInformation(AppAccessServiceRequest request) throws UserDoesNotExistException, InternalSystemException, InvalidRequestException, AuthenticatorValidationException, UnauthenticatedAppException{
 		
 		log.debug("Entering getUserInformation");
 		
-		Map<String, String> requestData = null;
-		try {
-			requestData = iAppAccessServiceAPI.processAppAccessServiceRequest(request);
-		} catch (InvalidAttributeValueException e) {
-			e.printStackTrace();
-		}
+		Map<String, String> requestData = request.getData(); //iAppAccessServiceAPI.processAppAccessServiceRequest(request);
 		
 		String username = requestData.get("uid");
 		String retrieveAttributes = requestData.get("RETRIEVE_ATTRIBUTES");
 		
 		if (username == null || retrieveAttributes == null || username.isEmpty() | retrieveAttributes.isEmpty()){
-			throw new InvalidRequestException("Invalid Input Data Provided", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
+			throw new InvalidRequestException();
 		}
 		
 		String[] attributes = retrieveAttributes.split(",");
@@ -69,20 +64,17 @@ public class RetrieveUserInformationRestService {
 		} catch (IOException e1) {
 			log.error("Error getting user information from directory\n"+e1.getMessage());
 			e1.printStackTrace();
-			throw new ServiceUnavailableException("Error processing request. Please try again later", Response.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_HTML);
+			throw new InternalSystemException();
 		} catch (NamingException e1) {
-			log.error("Invalid Input provided to getUserInfoForService. Error fetching user information\n"+e1.getMessage());
+			log.error("Error fetching user with the username. User with the username does not exist\n"+e1.getMessage());
 			e1.printStackTrace();
-			throw new InvalidInputException("Invalid parameters provided to retireve user information", Response.Status.BAD_REQUEST, MediaType.TEXT_HTML);
+			throw new UserDoesNotExistException();
 		}
 		
-		try {
-			return iAppAccessServiceAPI.generateAppAccessServiceResponse(request, userInfo);
-		} catch (InvalidAttributeValueException e) {
-			log.error("Error generating AppAccessServiceResponse");
-			e.printStackTrace();
-			throw new ServiceUnavailableException("Error processing request. Please try again later", Response.Status.INTERNAL_SERVER_ERROR, MediaType.TEXT_HTML);
-		}
+		AppAccessServiceResponse response = new AppAccessServiceResponse();
+		response.setEncResponseData(userInfo);
+		return response;
+//		return iAppAccessServiceAPI.generateAppAccessServiceResponse(request, userInfo);
 	}
 
 }

@@ -24,20 +24,20 @@ public class ErrorHandlerUtil {
 	 * @param responseClass
 	 * @return
 	 */
-	public KerberosRequestRepresentation generateErrorResponse(Class<? extends KerberosRequestRepresentation> responseClass, int responseCode, String errorMessage){
-		KerberosRequestRepresentation errorResponse = null;
-		try {
-			errorResponse = responseClass.getConstructor().newInstance();
-			errorResponse.setErrorCode(responseCode);
-			errorResponse.setErrorMessage(errorMessage);
-		} catch (InstantiationException | IllegalAccessException
-				| IllegalArgumentException | InvocationTargetException
-				| NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
-			log.error(e);
-		}
-		log.debug("Returning from generateErrorResponse method");
-		return errorResponse;
-	}
+//	public KerberosRequestRepresentation generateErrorResponse(Class<? extends KerberosRequestRepresentation> responseClass, int responseCode, String errorMessage){
+//		KerberosRequestRepresentation errorResponse = null;
+//		try {
+//			errorResponse = responseClass.getConstructor().newInstance();
+//			errorResponse.setErrorCode(responseCode);
+//			errorResponse.setErrorMessage(errorMessage);
+//		} catch (InstantiationException | IllegalAccessException
+//				| IllegalArgumentException | InvocationTargetException
+//				| NoSuchMethodException | SecurityException e) {
+//			e.printStackTrace();
+//			log.error(e);
+//		}
+//		log.debug("Returning from generateErrorResponse method");
+//		return errorResponse;
+//	}
 
 }

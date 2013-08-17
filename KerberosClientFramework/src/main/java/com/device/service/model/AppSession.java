@@ -14,8 +14,6 @@ import java.util.List;
 
 import javax.management.InvalidAttributeValueException;
 
-import com.device.exception.InvalidMethodArgumentValue;
-
 /**
  * @author raunak
  *
@@ -26,11 +24,35 @@ public class AppSession {
 	private Date created;
 	private List<UserSession> userSessions;
 	private List<Date> authenticators;
+	private boolean isActive;
+	private Date expiryTime;
 	
 	public AppSession() {
+		isActive = true;
+		created = new Date();
 		userSessions = new ArrayList<>();
 		authenticators = new LinkedList<>();
 	}
+	
+	/**
+	 * @return the isActive
+	 */
+	public boolean isActive() {
+		return isActive;
+	}
+
+	/**
+	 * @param isActive the isActive to set
+	 */
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+		if (!isActive){
+			for (UserSession session : userSessions){
+				session.setActive(false);
+			}
+		}
+	}
+
 	/**
 	 * @return the sessionID
 	 */
@@ -69,6 +91,20 @@ public class AppSession {
 	}
 	
 	/**
+	 * @return the expiryTime
+	 */
+	public Date getExpiryTime() {
+		return expiryTime;
+	}
+
+	/**
+	 * @param expiryTime the expiryTime to set
+	 */
+	public void setExpiryTime(Date expiryTime) {
+		this.expiryTime = expiryTime;
+	}
+
+	/**
 	 * @return
 	 */
 	public Date createAuthenticator(){
@@ -100,7 +136,7 @@ public class AppSession {
 	 * @return created UserSession else null 
 	 * @throws InvalidAttributeValueException
 	 */
-	public UserSession createUserServiceSession(String username, String userSessionID) {
+	public UserSession createUserServiceSession(String username, String userSessionID, Date expiryTime) {
 		
 		if (username == null || userSessionID == null){
 			return null;
@@ -109,6 +145,7 @@ public class AppSession {
 		UserSession serviceSession = new UserSession();
 		serviceSession.setUsername(username);
 		serviceSession.setUserSessionID(userSessionID);
+		serviceSession.setExpiryTime(expiryTime);
 		
 		userSessions.add(serviceSession);
 		
@@ -119,14 +156,19 @@ public class AppSession {
 	 * @param username
 	 * @return UserSession related to the username
 	 */
-	public UserSession findUserServiceSessionByUsername(String username) {
+	public UserSession findActiveUserServiceSessionByUsername(String username) {
 		if (username == null || username.isEmpty()){
-			throw new InvalidMethodArgumentValue("findUserServiceSessionByUsername");
+			throw new IllegalArgumentException("findUserServiceSessionByUsername");
 		}
 		
 		for(UserSession session : userSessions){
-			if (session.getUsername().equals(username)){
-				return session;
+			if (session.getUsername().equals(username) && session.isActive()){
+				if (session.getExpiryTime().before(new Date())){
+					session.setActive(false);
+				}
+				else{
+					return session;
+				}
 			}
 		}
 		
@@ -140,7 +182,7 @@ public class AppSession {
 	public void addAuthenticator(Date authenticator) {
 		
 		if(authenticator == null){
-			throw new InvalidMethodArgumentValue("addAuthenticator");
+			throw new IllegalArgumentException("addAuthenticator");
 		}
 		authenticators.add(authenticator);
 	}
@@ -148,9 +190,8 @@ public class AppSession {
 	/**
 	 * @param authenticator
 	 * @return
-	 * @throws InvalidAttributeValueException
 	 */
-	public boolean validateAuthenticator(Date authenticator) throws InvalidAttributeValueException{
+	public boolean validateAuthenticator(Date authenticator) {
 		
 		if(authenticator == null){
 			return false;

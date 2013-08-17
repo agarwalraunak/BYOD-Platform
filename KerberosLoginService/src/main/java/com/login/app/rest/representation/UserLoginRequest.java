@@ -1,72 +1,42 @@
 package com.login.app.rest.representation;
 
-import com.login.rest.representation.KerberosRequestRepresentation;
+import com.login.rest.representation.AppRestServiceRequest;
 
-public class UserLoginRequest extends KerberosRequestRepresentation{
+/**
+ * @author raunak
+ *
+ */
+public class UserLoginRequest extends AppRestServiceRequest{
 	
-	private String encUsername;			//Encrypted using app session id
-	private String encPassword;			//Encrypted using app session id
-	private String encAppSessionID;		//Encrypted using service session id
-	private String appID;					//App username
-	private String encAuthenticator;		//Encryped using app session id
+	private String encUsername;			
+	private String encPassword;			
+
 	/**
-	 * @return the encUsername
+	 * @return 
+	 * <code>String</code> encUsername encrypted using <strong>App Session ID</strong>
 	 */
 	public String getEncUsername() {
 		return encUsername;
 	}
 	/**
-	 * @param encUsername the encUsername to set
+	 * @param 
+	 * <code>String</code> encUsername encrypted using <strong>App Session ID</strong>
 	 */
 	public void setEncUsername(String encUsername) {
 		this.encUsername = encUsername;
 	}
 	/**
-	 * @return the encPassword
+	 * @return
+	 * <code>String</code> encPassword encrypted using <strong>App Session ID</strong>
 	 */
 	public String getEncPassword() {
 		return encPassword;
 	}
 	/**
-	 * @param encPassword the encPassword to set
+	 * @param
+	 * <code>String</code> encPassword encrypted using <strong>App Session ID</strong>
 	 */
 	public void setEncPassword(String encPassword) {
 		this.encPassword = encPassword;
-	}
-	/**
-	 * @return the encAppSessionID
-	 */
-	public String getEncAppSessionID() {
-		return encAppSessionID;
-	}
-	/**
-	 * @param encAppSessionID the encAppSessionID to set
-	 */
-	public void setEncAppSessionID(String encAppSessionID) {
-		this.encAppSessionID = encAppSessionID;
-	}
-	/**
-	 * @return the appID
-	 */
-	public String getAppID() {
-		return appID;
-	}
-	/**
-	 * @param appID the appID to set
-	 */
-	public void setAppID(String appID) {
-		this.appID = appID;
-	}
-	/**
-	 * @return the encAuthenticator
-	 */
-	public String getEncAuthenticator() {
-		return encAuthenticator;
-	}
-	/**
-	 * @param encAuthenticator the encAuthenticator to set
-	 */
-	public void setEncAuthenticator(String encAuthenticator) {
-		this.encAuthenticator = encAuthenticator;
 	}
 }

@@ -5,18 +5,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
+import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.service.exception.RestClientException;
+import com.service.exception.common.InternalSystemException;
 import com.service.kerberos.rest.api.KerberosAuthenticationAPIImpl.ServiceTicketResponseAttributes;
 import com.service.kerberos.rest.client.IKerberosAuthenticationClient;
 import com.service.kerberos.rest.client.IKerberosServiceTicketClient;
 import com.service.kerberos.rest.representation.ServiceTicketRequest;
 import com.service.kerberos.rest.representation.ServiceTicketResponse;
 import com.service.model.SessionDirectory;
-import com.service.rest.exception.common.InternalSystemException;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.service.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
 import com.service.util.connectionmanager.IConnectionManager;
@@ -67,6 +69,12 @@ public class KerberosServiceRequestAPIImpl implements IKerberosServiceRequestAPI
 		} catch (IOException e) {
 			log.error("Error fetching service ticket from kerberos\n"+e.getMessage());
 			e.printStackTrace();
+			throw new InternalSystemException();
+		} catch (RestClientException e) {
+			e.printStackTrace();
+			if (e.getErrorCode() == Response.Status.UNAUTHORIZED.getStatusCode()){
+				sessionDirectory.setKerberosAppSession(null);
+			}
 			throw new InternalSystemException();
 		}
 		if (response == null){

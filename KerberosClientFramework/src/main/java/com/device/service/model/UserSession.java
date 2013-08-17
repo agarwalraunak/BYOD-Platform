@@ -11,10 +11,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.management.InvalidAttributeValueException;
-
-import com.device.exception.InvalidMethodArgumentValue;
-
 /**
  * @author raunak
  *
@@ -25,11 +21,45 @@ public class UserSession {
 	private String username;
 	private Date created;
 	private List<Date> authenticators;
+	private boolean isActive;
+	private Date expiryTime;
 	
 	public UserSession() {
 		created = new Date();
 		authenticators = new LinkedList<>();
+		isActive = true;
 	}
+	
+	/**
+	 * @return the expiryTime
+	 */
+	public Date getExpiryTime() {
+		return expiryTime;
+	}
+
+	/**
+	 * @param expiryTime the expiryTime to set
+	 */
+	public void setExpiryTime(Date expiryTime) {
+		this.expiryTime = expiryTime;
+	}
+
+	/**
+	 * @return the isActive
+	 */
+	public boolean isActive() {
+		return isActive;
+	}
+
+
+	/**
+	 * @param isActive the isActive to set
+	 */
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+
 	/**
 	 * @return the userSessionID
 	 */
@@ -89,12 +119,10 @@ public class UserSession {
 	}
 	/**
 	 * @param authenticator
-	 * @throws InvalidAttributeValueException
 	 */
 	public void addAuthenticator(Date authenticator) {
-		
 		if(authenticator == null){
-			throw new InvalidMethodArgumentValue("addAuthenticator");
+			throw new IllegalArgumentException("Invalid parameter provided to addAuthenticator");
 		}
 		authenticators.add(authenticator);
 	}
@@ -102,12 +130,11 @@ public class UserSession {
 	/**
 	 * @param authenticator
 	 * @return
-	 * @throws InvalidAttributeValueException
 	 */
-	public boolean validateAuthenticator(Date authenticator) throws InvalidAttributeValueException{
+	public boolean validateAuthenticator(Date authenticator) {
 		
 		if(authenticator == null){
-			throw new InvalidAttributeValueException("Invalid parameter provided to addAuthenticator");
+			throw new IllegalArgumentException("Invalid parameter provided to addAuthenticator");
 		}
 		
 		Date lastAuthenticator;

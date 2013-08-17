@@ -2,11 +2,12 @@ package com.device.login.rest.representation;
 
 import com.device.rest.representation.KerberosRequestRepresentation;
 
-public class UserLoginResponse extends KerberosRequestRepresentation {
+public class UserLoginResponse extends KerberosRequestRepresentation{
 
 	private String encUsername; 						//Encrypted using the AppSessionID
 	private String encUserSessionID;					//Encrypted using the AppSessionID
 	private String encResponseAuthenticator;	//Encrypted using the AppSessionID
+	private String encExpiryTime;
 	/**
 	 * @return the encUsername
 	 */
@@ -43,4 +44,17 @@ public class UserLoginResponse extends KerberosRequestRepresentation {
 	public void setEncResponseAuthenticator(String encResponseAuthenticator) {
 		this.encResponseAuthenticator = encResponseAuthenticator;
 	}
+	/**
+	 * @return the encExpiryTime
+	 */
+	public String getEncExpiryTime() {
+		return encExpiryTime;
+	}
+	/**
+	 * @param encExpiryTime the encExpiryTime to set
+	 */
+	public void setEncExpiryTime(String encExpiryTime) {
+		this.encExpiryTime = encExpiryTime;
+	}
+	
 }

@@ -13,10 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.service.config.applicationdetailservice.ApplicationDetailService;
+import com.service.exception.common.AuthenticatorValidationException;
 import com.service.model.SessionDirectory;
 import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
 import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.service.rest.representation.AppAccessServiceResponse;
 import com.service.util.dateutil.IDateUtil;

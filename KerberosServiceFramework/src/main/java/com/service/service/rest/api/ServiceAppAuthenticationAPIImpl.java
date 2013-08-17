@@ -55,16 +55,17 @@ public class ServiceAppAuthenticationAPIImpl implements IServiceAppAuthenticatio
 	}
 	
 	@Override
-	public ServiceSession processAuthenticateAppResponse(String encAppSessionID, String encResponseAuthenticator, Date requestAuthenticator, ServiceTicket serviceTicket, SecretKey serviceSessionKey) {
+	public ServiceSession processAuthenticateAppResponse(String encAppSessionID, String encResponseAuthenticator, String encExpiryTime,
+			Date requestAuthenticator, ServiceTicket serviceTicket, SecretKey serviceSessionKey) {
 		
 		log.debug("Entering processAuthenticateAppResponse method");
 		
-		if (!iEncryptionUtil.validateDecryptedAttributes(encAppSessionID, encResponseAuthenticator) || serviceSessionKey == null || serviceTicket == null){
+		if (!iEncryptionUtil.validateDecryptedAttributes(encAppSessionID, encResponseAuthenticator, encExpiryTime) || serviceSessionKey == null || serviceTicket == null){
 			log.error("Invalid input parameter provided to processAuthenticateAppResponse");
 			return null;
 		}
 		
-		String[] decryptedData = iEncryptionUtil.decrypt(serviceSessionKey, encAppSessionID, encResponseAuthenticator);
+		String[] decryptedData = iEncryptionUtil.decrypt(serviceSessionKey, encAppSessionID, encResponseAuthenticator, encExpiryTime);
 		
 		if (!iEncryptionUtil.validateDecryptedAttributes(decryptedData)){
 			log.error("Response Parametes failed to decyrpt for Application Authentication");
@@ -73,9 +74,10 @@ public class ServiceAppAuthenticationAPIImpl implements IServiceAppAuthenticatio
 		
 		String appSessionID = decryptedData[0];
 		String responseAuthenticator = decryptedData[1];
+		String expiryTime = decryptedData[2];
 		
 		//Create the Service Session
-		ServiceSession serviceSession = serviceTicket.createServiceSession(appSessionID);
+		ServiceSession serviceSession = serviceTicket.createServiceSession(appSessionID, iDateUtil.generateDateFromString(expiryTime));
 		
 		serviceSession.addAuthenticator(requestAuthenticator);
 		serviceSession.addAuthenticator(iDateUtil.generateDateFromString(responseAuthenticator));

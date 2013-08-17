@@ -3,42 +3,25 @@
  */
 package com.login.service.rest.representation;
 
+import com.login.rest.representation.RestServiceResponse;
+
 /**
  * @author raunak
  *
  */
-public class ServiceValidateUserAuthenticationResponse {
+public class ServiceValidateUserAuthenticationResponse extends RestServiceResponse{
 	
-	/*
-	 * Encrypted using App Login Session ID
-	 */
 	private String encIsAuthenticated;
-	private String encResponseAuthenticator;
 	/**
-	 * @return the encIsAuthenticated
+	 * @return <code>String</code> isAuthenticated encrytped with <strong>App Session ID</strong>
 	 */
 	public String getEncIsAuthenticated() {
 		return encIsAuthenticated;
 	}
 	/**
-	 * @param encIsAuthenticated the encIsAuthenticated to set
+	 * @param <code>String</code> isAuthenticated encrytped with <strong>App Session ID</strong>
 	 */
 	public void setEncIsAuthenticated(String encIsAuthenticated) {
 		this.encIsAuthenticated = encIsAuthenticated;
 	}
-	/**
-	 * @return the encResponseAuthenticator
-	 */
-	public String getEncResponseAuthenticator() {
-		return encResponseAuthenticator;
-	}
-	/**
-	 * @param encResponseAuthenticator the encResponseAuthenticator to set
-	 */
-	public void setEncResponseAuthenticator(String encResponseAuthenticator) {
-		this.encResponseAuthenticator = encResponseAuthenticator;
-	}
-	
-	
-
 }

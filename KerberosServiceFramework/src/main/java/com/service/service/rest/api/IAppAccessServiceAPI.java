@@ -6,9 +6,9 @@ package com.service.service.rest.api;
 import java.util.Date;
 import java.util.Map;
 
+import com.service.exception.common.AuthenticatorValidationException;
 import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
 import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.service.rest.representation.AppAccessServiceResponse;
 

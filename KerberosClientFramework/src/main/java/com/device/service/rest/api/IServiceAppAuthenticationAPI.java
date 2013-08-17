@@ -6,8 +6,8 @@ package com.device.service.rest.api;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
-import javax.management.InvalidAttributeValueException;
 
+import com.device.exception.ResponseDecryptionException;
 import com.device.kerberos.model.ServiceTicket;
 import com.device.service.model.AppSession;
 import com.device.service.rest.representation.AppAuthenticationRequest;
@@ -24,25 +24,26 @@ public interface IServiceAppAuthenticationAPI {
 	 * @param serviceTicketPacket
 	 * @param requestAuthenticator
 	 * @return
-	 * @throws InvalidAttributeValueException
 	 */
 	AppAuthenticationRequest createAppAuthenticationRequest(
 			SecretKey serviceSessionKey, String serviceTicketPacket,
-			String requestAuthenticator) throws InvalidAttributeValueException;
+			String requestAuthenticator) ;
+
 
 	/**
 	 * @param encAppSessionID
 	 * @param encResponseAuthenticator
+	 * @param encExpiryTime
 	 * @param requestAuthenticator
 	 * @param serviceTicket
 	 * @param serviceSessionKey
 	 * @return
-	 * @throws InvalidAttributeValueException
+	 * @throws ResponseDecryptionException
 	 */
 	AppSession processAuthenticateAppResponse(String encAppSessionID,
-			String encResponseAuthenticator, Date requestAuthenticator,
-			ServiceTicket serviceTicket, SecretKey serviceSessionKey)
-			throws InvalidAttributeValueException;
+			String encResponseAuthenticator, String encExpiryTime,
+			Date requestAuthenticator, ServiceTicket serviceTicket,
+			SecretKey serviceSessionKey) throws ResponseDecryptionException;
 
 
 }

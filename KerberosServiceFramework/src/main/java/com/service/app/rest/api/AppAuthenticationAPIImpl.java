@@ -33,7 +33,7 @@ public class AppAuthenticationAPIImpl  implements IAppAuthenticationAPI{
 	private @Autowired IHashUtil iHashUtil;
 	
 	public enum ServiceTicketAttributes{
-		USERNAME, SERVICE_SESSION_ID, SERVICE_TICKET_EXPIRATION_TIME_STR
+		APP_LOGIN_NAME, SERVICE_SESSION_ID, SERVICE_TICKET_EXPIRATION_TIME_STR
 	}
 	
 	@Override
@@ -64,7 +64,7 @@ public class AppAuthenticationAPIImpl  implements IAppAuthenticationAPI{
 		String serviceTicketExpirationString = serviceTicketParts[2];
 		
 		Map<ServiceTicketAttributes, String> serviceTicketAttributes = new HashMap<ServiceTicketAttributes, String>();
-		serviceTicketAttributes.put(ServiceTicketAttributes.USERNAME, username);
+		serviceTicketAttributes.put(ServiceTicketAttributes.APP_LOGIN_NAME, username);
 		serviceTicketAttributes.put(ServiceTicketAttributes.SERVICE_SESSION_ID, serviceSessionID);
 		serviceTicketAttributes.put(ServiceTicketAttributes.SERVICE_TICKET_EXPIRATION_TIME_STR, serviceTicketExpirationString);
 		
@@ -106,14 +106,16 @@ public class AppAuthenticationAPIImpl  implements IAppAuthenticationAPI{
 		Date responseAuthenticator = iDateUtil.createResponseAuthenticator(requestAuthenticator);
 		appSession.addAuthenticator(requestAuthenticator);
 		appSession.addAuthenticator(responseAuthenticator);
-		String[] encryptedData = iEncryptionUtil.encrypt(serviceSessionKey, appSession.getSessionID(),  iDateUtil.generateStringFromDate(responseAuthenticator));
+		String[] encryptedData = iEncryptionUtil.encrypt(serviceSessionKey, appSession.getSessionID(),  iDateUtil.generateStringFromDate(responseAuthenticator), iDateUtil.generateStringFromDate(appSession.getExpiryTime()));
 		String encAppSessionID = encryptedData[0];
 		String encResponseAuthenticator  = encryptedData[1];
+		String encExpiryTime = encryptedData[2];
 		
 		//Create the response
 		AppAuthenticationResponse response = new AppAuthenticationResponse();
 		response.setEncResponseAuthenticator(encResponseAuthenticator);
 		response.setEncAppSessionID(encAppSessionID);
+		response.setEncExpiryTime(encExpiryTime);
 		
 		log.debug("Returning from createKeyRequestResponse method");
 		

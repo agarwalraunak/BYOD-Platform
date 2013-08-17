@@ -12,14 +12,14 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.service.app.rest.representation.AccessServiceRequest;
-import com.service.app.rest.representation.AccessServiceResponse;
+import com.service.app.rest.representation.UserAccessServiceRequest;
+import com.service.app.rest.representation.UserAccessServiceResponse;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.UnauthenticatedAppException;
+import com.service.exception.common.UnauthenticatedUserException;
 import com.service.model.SessionDirectory;
 import com.service.model.app.AppSession;
 import com.service.model.app.UserSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
-import com.service.rest.exception.common.UnauthenticatedAppException;
-import com.service.rest.exception.common.UnauthenticatedUserException;
 import com.service.util.dateutil.IDateUtil;
 import com.service.util.encryption.IEncryptionUtil;
 import com.service.util.hashing.IHashUtil;
@@ -40,7 +40,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 	
 	
 	@Override
-	public Map<String, String> processAccessServiceRequest(AccessServiceRequest request) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException {
+	public Map<String, String> processAccessServiceRequest(UserAccessServiceRequest request) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException {
 		
 		log.debug("Entering processAccessServiceRequest");
 		
@@ -55,7 +55,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 		String encRequestAuthenticator = request.getEncAuthenticator();
 		String encUserSessionID = request.getEncUserSessionID();
 		
-		AppSession appServiceSession = sessionDirectory.findAppSessionByAppID(appID);
+		AppSession appServiceSession = sessionDirectory.findActiveAppSessionByAppID(appID);
 		
 		if (appServiceSession == null){
 			log.error("Invalid App Username found");
@@ -84,7 +84,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 		String userSessionID = decryptedData[1];
 		
 		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
-		UserSession userSession = appServiceSession.findUserSessionBySessionID(userSessionID);
+		UserSession userSession = appServiceSession.findActiveUserSessionBySessionID(userSessionID);
 		
 		//Check if the User Session exists for the user session id
 		if (userSession == null){
@@ -108,7 +108,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 	}
 	
 	@Override
-	public AccessServiceResponse generateAccessServiceResponse(AccessServiceRequest request, Map<String, String> responseData) {
+	public UserAccessServiceResponse generateAccessServiceResponse(UserAccessServiceRequest request, Map<String, String> responseData) {
 		
 		log.debug("Entering generateAccessServiceResponse");
 		
@@ -122,7 +122,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 		String encUserSessionID = request.getEncUserSessionID();
 		String appID = request.getAppID();
 		
-		AppSession appServiceSession =sessionDirectory.findAppSessionByAppID(appID);
+		AppSession appServiceSession =sessionDirectory.findActiveAppSessionByAppID(appID);
 		
 		SecretKey appServiceSessionKey = iEncryptionUtil.generateSecretKey(appServiceSession.getKerberosServiceSessionID());
 		
@@ -134,7 +134,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 		String requestAuthenticatorStr = decryptedData[0];
 		String userSessionID = decryptedData[1];
 		
-		UserSession userSession = appServiceSession.findUserSessionBySessionID(userSessionID);
+		UserSession userSession = appServiceSession.findActiveUserSessionBySessionID(userSessionID);
 		
 		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
 		
@@ -151,7 +151,7 @@ public class AccessServiceAPIImpl implements IAccessServiceAPI{
 		String encResponseAuthenticator = iEncryptionUtil.encrypt(userSessionKey, iDateUtil.generateStringFromDate(responseAuthenticator))[0];
 		Map<String, String> encResponseData = iEncryptionUtil.encrypt(userSessionKey, responseData);
 		
-		AccessServiceResponse response = new AccessServiceResponse();
+		UserAccessServiceResponse response = new UserAccessServiceResponse();
 		response.setData(encResponseData);
 		response.setEncAuthenticator(encResponseAuthenticator);
 		

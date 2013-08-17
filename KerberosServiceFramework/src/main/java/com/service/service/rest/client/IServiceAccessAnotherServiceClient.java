@@ -3,9 +3,10 @@ package com.service.service.rest.client;
 import java.io.IOException;
 import java.util.Map;
 
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.InternalSystemException;
 import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.service.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
 
@@ -25,11 +26,12 @@ public interface IServiceAccessAnotherServiceClient {
 	 * @return
 	 * @throws IOException
 	 * @throws AuthenticatorValidationException 
+	 * @throws InternalSystemException 
 	 */
 	Map<String, String> contactAnotherService(String url,
 			RequestMethod requestMethod, ContentType contentType,
 			String serviceName, KerberosAppSession kerberosAppSession,
 			String serviceSessionID, ServiceSession serviceSession,
-			Map<String, String> requestData) throws IOException, AuthenticatorValidationException;
+			Map<String, String> requestData) throws IOException, AuthenticatorValidationException, InternalSystemException;
 
 }

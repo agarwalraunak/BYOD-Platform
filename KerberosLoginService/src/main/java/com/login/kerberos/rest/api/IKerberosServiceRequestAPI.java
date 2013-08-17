@@ -6,11 +6,8 @@ package com.login.kerberos.rest.api;
 import java.io.IOException;
 import java.util.Map;
 
-import javax.management.InvalidAttributeValueException;
-
-import com.login.kerberos.model.ServiceTicket;
+import com.login.exception.RestClientException;
 import com.login.kerberos.rest.api.KerberosAuthenticationAPIImpl.ServiceTicketResponseAttributes;
-import com.login.rest.exceptions.ServiceUnavailableException;
 
 /**
  * @author raunak
@@ -24,20 +21,11 @@ public interface IKerberosServiceRequestAPI {
 	 * @param serviceName
 	 * @param sessionKey
 	 * @return
-	 * @throws IOException
-	 * @throws InvalidAttributeValueException
+	 * @throws RestClientException 
+	 * @throws IOException 
 	 */
 	Map<ServiceTicketResponseAttributes, String> requestServiceTicketForApp(
 			String url, String encAppTGTPacket, String serviceName,
-			String sessionKey) throws IOException,
-			InvalidAttributeValueException;
-
-	/**
-	 * @param serviceName
-	 * @return
-	 * @throws ServiceUnavailableException
-	 */
-	ServiceTicket checkAppAuthenticationAndGetServiceTicket(String serviceName)
-			throws ServiceUnavailableException;
+			String sessionKey) throws IOException, RestClientException;
 
 }

@@ -4,27 +4,22 @@
 package com.login.service.rest.api;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
-import javax.management.InvalidAttributeValueException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.login.app.model.AppSession;
-import com.login.app.model.AppSessionDirectory;
-import com.login.app.model.UserSession;
-import com.login.rest.exceptions.InvalidRequestException;
-import com.login.rest.exceptions.UnauthenticatedAppException;
-import com.login.rest.exceptions.UnauthenticatedUserException;
-import com.login.service.rest.representation.AccessServiceRequest;
-import com.login.service.rest.representation.AccessServiceResponse;
+import com.login.exception.common.AuthenticatorValidationException;
+import com.login.exception.common.UnauthenticatedAppException;
+import com.login.exception.common.UnauthenticatedUserException;
+import com.login.model.SessionDirectory;
+import com.login.model.app.AppSession;
+import com.login.model.app.UserSession;
+import com.login.service.rest.representation.UserAccessServiceRequest;
+import com.login.service.rest.representation.UserAccessServiceResponse;
 import com.login.util.dateutil.IDateUtil;
 import com.login.util.encryption.IEncryptionUtil;
 import com.login.util.hashing.IHashUtil;
@@ -41,149 +36,142 @@ public class UserAccessServiceAPIImpl implements IUserAccessServiceAPI{
 	private @Autowired IDateUtil iDateUtil;
 	private @Autowired IEncryptionUtil iEncryptionUtil;
 	private @Autowired IHashUtil iHashUtil;
-	private @Autowired AppSessionDirectory sessionDirectoryy;
+	private @Autowired SessionDirectory sessionDirectory;
 	
 	
 	@Override
-	public Map<String, String> processAccessServiceRequest(AccessServiceRequest request) throws InvalidAttributeValueException{
+	public Map<String, String> processAccessServiceRequest(UserAccessServiceRequest request) throws UnauthenticatedAppException, AuthenticatorValidationException, UnauthenticatedUserException{
 		
 		log.debug("Entering processAccessServiceRequest");
 		
 		if (request == null){
 			log.debug("Invalid input parameter provided to processAccessServiceRequest");
-			throw new InvalidAttributeValueException("Invalid input parameter provided to processAccessServiceRequest");
+			throw new IllegalArgumentException("Invalid input parameter provided to processAccessServiceRequest");
 		}
 		
 		String appID = request.getAppID();
-		String  encAppSessionID = request.getEncAppSessionID();
-		Map<String, String> encData = request.getData();
-		String encRequestAuthenticator = request.getEncAuthenticator();
-		String encUserSessionID = request.getEncUserSessionID();
 		
-		AppSession appServiceSession = sessionDirectoryy.findAppSessionByAppID(appID);
+		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(appID);
 		
-		if (appServiceSession == null){
+		if (appSession == null){
 			log.error("Invalid App Username found");
-			throw new InvalidRequestException("Invalid App Username. Bad request found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
 		
-		SecretKey appServiceSessionKey = iEncryptionUtil.generateSecretKey(appServiceSession.getAppServiceSessionID());
-		
+		SecretKey appServiceSessionKey = iEncryptionUtil.generateSecretKey(appSession.getKerberosServiceSessionID());
+		String  encAppSessionID = request.getEncAppSessionID();
 		String decAppSessionID = iEncryptionUtil.decrypt(appServiceSessionKey, encAppSessionID)[0];
 		
-		if (!iEncryptionUtil.validateDecryptedAttributes(decAppSessionID) || !decAppSessionID.equals(appServiceSession.getAppSessionID())){
+		//Validating the Decrypted App Session ID 
+		//Checking if the App Session ID in the request is the same with the server
+		if (!iEncryptionUtil.validateDecryptedAttributes(decAppSessionID) || !decAppSessionID.equals(appSession.getSessionID())){
 			log.error("Invalid App Session ID found");
-			throw new InvalidRequestException("Invalid App Session ID. Bad request found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
 		
 		SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(decAppSessionID);
 		
-		String[] decryptedData = iEncryptionUtil.decrypt(appSessionKey, encRequestAuthenticator, encUserSessionID);
-		String requestAuthenticatorStr = decryptedData[0];
-		String userSessionID = decryptedData[1];
+		String encUserSessionID = request.getEncUserSessionID();
+		String encRequestAuthenticator = request.getEncAuthenticator();
 		
+		//Decrypting the Request Parameters
+		String[] decryptedData = iEncryptionUtil.decrypt(appSessionKey, encRequestAuthenticator, encUserSessionID);
+		//Validate the decrypted parameters
 		if (!iEncryptionUtil.validateDecryptedAttributes(decryptedData)){
 			log.error("Unable to decrypt the request attributes. Request Invalid!");
-			throw new InvalidRequestException("Request from unauthenticated app. Request Invalid!", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
+		}
+		String requestAuthenticatorStr = decryptedData[0];
+		String userSessionID = decryptedData[1];
+		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
+		
+		//validate the request authenticator
+		if (!appSession.validateAuthenticator(requestAuthenticator)){
+			log.error("Validation of the User Access Service Request authenticator failed");
+			throw new AuthenticatorValidationException();
 		}
 		
-		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
-		UserSession userSession = appServiceSession.findUserSessionBySessionID(userSessionID);
+		UserSession userSession = appSession.findActiveUserSessionBySessionID(userSessionID);
 		
 		//Check if the User Session exists for the user session id
 		if (userSession == null){
 			log.error("User Session ID does not exist. Request Invalid!");
-			throw new InvalidRequestException("User Session ID does not exist. Request Invalid!", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedUserException();
 		}
 		
 		//Validate the authenticator
 		if (!userSession.validateAuthenticator(requestAuthenticator)){
 			log.error("Invalid Authenticator found. Request Invalid!");
-			throw new InvalidRequestException("Invalid Authenticator Found. Request Invalid!", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new AuthenticatorValidationException();
 		}
 		
 		SecretKey userSessionKey = iEncryptionUtil.generateSecretKey(userSessionID);
-		
-		Map<String, String> decData = null;
-		if (encData != null && encData.keySet().size() > 0){
-			decData = new HashMap<>();
-			Iterator<String> iterator = encData.keySet().iterator();
-			String key = null;
-			while(iterator.hasNext()){
-				key = iterator.next();
-				decData.put(key, iEncryptionUtil.decrypt(userSessionKey, encData.get(key))[0]);
-			}
-		}
-		
+		Map<String, String> encData = request.getData();
+		Map<String, String> decData = iEncryptionUtil.decrypt(userSessionKey, encData);
+
 		log.debug("Returning from processAccessServiceRequest");
 		
 		return decData;
 	}
 	
 	@Override
-	public AccessServiceResponse generateAccessServiceResponse(AccessServiceRequest request, Map<String, String> responseData) throws InvalidAttributeValueException{
+	public UserAccessServiceResponse generateAccessServiceResponse(UserAccessServiceRequest request, Map<String, String> responseData) throws UnauthenticatedAppException, UnauthenticatedUserException {
 		
-		String encRequestAuthenticator = request.getEncAuthenticator();
-		String  encAppSessionID = request.getEncAppSessionID();
-		String encUserSessionID = request.getEncUserSessionID();
+		if (request == null){
+			log.error("Invalid Input parameter provided to generateAccessServiceResponse");
+			throw new IllegalArgumentException("Invalid Input parameter provided to generateAccessServiceResponse");
+		}
 		
 		String appID = request.getAppID();
 		
-		AppSession appServiceSession =sessionDirectoryy.findAppSessionByAppID(appID);
+		AppSession appSession =sessionDirectory.findActiveAppSessionByAppID(appID);
 		
-		if (appServiceSession == null){
-			throw new UnauthenticatedAppException("Unauthenticated App found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+		if (appSession == null){
+			throw new UnauthenticatedAppException();
 		}
 		
-		SecretKey appServiceSessionKey = iEncryptionUtil.generateSecretKey(appServiceSession.getAppServiceSessionID());
-		
+		SecretKey appServiceSessionKey = iEncryptionUtil.generateSecretKey(appSession.getKerberosServiceSessionID());
+		String  encAppSessionID = request.getEncAppSessionID();
 		String decAppSessionID = iEncryptionUtil.decrypt(appServiceSessionKey, encAppSessionID)[0];
 		if (decAppSessionID == null || decAppSessionID.isEmpty()){
-			throw new UnauthenticatedAppException("Unauthenticated App found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
 		
 		SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(decAppSessionID);
 		
+		String encRequestAuthenticator = request.getEncAuthenticator();
+		String encUserSessionID = request.getEncUserSessionID();
 		String[] decryptedData = iEncryptionUtil.decrypt(appSessionKey, encRequestAuthenticator, encUserSessionID);
-		String requestAuthenticatorStr = decryptedData[0];
-		String userSessionID = decryptedData[1];
 		
 		if (iEncryptionUtil.validateDecryptedAttributes(decryptedData)){
-			throw new UnauthenticatedAppException("Unauthenticated Request found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
+			throw new UnauthenticatedAppException();
 		}
-		
-		UserSession userSession = appServiceSession.findUserSessionBySessionID(userSessionID);
-		if (userSession == null){
-			throw new UnauthenticatedUserException("Unauthenticated User found", Response.Status.UNAUTHORIZED, MediaType.TEXT_HTML);
-		}
-		
+
+		String requestAuthenticatorStr = decryptedData[0];
+		String userSessionID = decryptedData[1];
 		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
+		
+		UserSession userSession = appSession.findActiveUserSessionBySessionID(userSessionID);
+		if (userSession == null){
+			throw new UnauthenticatedUserException();
+		}
 		
 		Date responseAuthenticator = iDateUtil.createResponseAuthenticator(requestAuthenticator);
 		
 		//Adding authenticators to session
-		appServiceSession.addAuthenticator(requestAuthenticator);
+		appSession.addAuthenticator(requestAuthenticator);
 		userSession.addAuthenticator(requestAuthenticator);
 		userSession.addAuthenticator(responseAuthenticator);
-		appServiceSession.addAuthenticator(responseAuthenticator);
+		appSession.addAuthenticator(responseAuthenticator);
 		
 		SecretKey userSessionKey = iEncryptionUtil.generateSecretKey(userSessionID);
 		
 		String encResponseAuthenticator = iEncryptionUtil.encrypt(userSessionKey, iDateUtil.generateStringFromDate(responseAuthenticator))[0];
-		Map<String, String> encResponseData = null;
-		if (responseData != null && responseData.keySet().size() > 0){
-			encResponseData = new HashMap<>();
-			Iterator<String> iterator = responseData.keySet().iterator();
-			String key = null;
-			while(iterator.hasNext()){
-				key = iterator.next();
-				encResponseData.put(key, iEncryptionUtil.encrypt(userSessionKey, responseData.get(key))[0]);
-			}
-		}
+		Map<String, String> encResponseData = iEncryptionUtil.encrypt(userSessionKey, responseData);
 		
-		AccessServiceResponse response = new AccessServiceResponse();
+		UserAccessServiceResponse response = new UserAccessServiceResponse();
 		response.setData(encResponseData);
-		response.setEncAuthenticator(encResponseAuthenticator);
+		response.setEncResponseAuthenticator(encResponseAuthenticator);
 		
 		
 		return response;

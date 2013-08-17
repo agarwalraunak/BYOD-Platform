@@ -3,13 +3,12 @@
  */
 package com.login.kerberos.rest.representation;
 
-import com.login.rest.representation.KerberosRequestRepresentation;
 
 /**
  * @author raunak
  *
  */
-public class ServiceTicketResponse extends KerberosRequestRepresentation {
+public class ServiceTicketResponse  {
 
 	private String encServiceTicket;
 	private String encServiceSessionID;

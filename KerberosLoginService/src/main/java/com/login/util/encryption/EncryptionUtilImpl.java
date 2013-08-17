@@ -3,17 +3,26 @@
  */
 package com.login.util.encryption;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.management.InvalidAttributeValueException;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
@@ -38,11 +47,11 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 	
 	
 	@Override
-	public SecretKey generateSecretKey(String encryptionKey) throws InvalidAttributeValueException{
+	public SecretKey generateSecretKey(String encryptionKey) {
 		
 		if(encryptionKey == null || encryptionKey.isEmpty()){
 			log.error("Invalid Input parameter for generateSecretKey encryptionKey can not be null or empty");
-			throw new InvalidAttributeValueException(this.getClass().getName()+ ": Input paramter to generateSecretKey can not be null or empty");
+			return null;
 		}
 		SecretKey secretKey = null;
 		try {
@@ -70,9 +79,9 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 	 * Method To Encrypt The String
 	 */
 	@Override
-	public String[] encrypt(SecretKey key, String...input) throws InvalidAttributeValueException{
+	public String[] encrypt(SecretKey key, String...input) {
 		if (input == null || key == null) {
-			throw new InvalidAttributeValueException("Input to enrypt method can not be null");
+			return null;
 		}
 		if (input.length == 0){
 			return null;
@@ -89,23 +98,66 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 			String data = null;
 			for (int i = 0; i<input.length; i++){
 				data = input[i];
-				byte[] plainText = data.getBytes(UNICODE_FORMAT);
-				byte[] cipherBytes = cipher.doFinal(plainText);
-				encryptedInput[i] = base64encoder.encode(cipherBytes);
+				if (data != null){
+					byte[] plainText = data.getBytes(UNICODE_FORMAT);
+					byte[] cipherBytes = cipher.doFinal(plainText);
+					encryptedInput[i] = base64encoder.encode(cipherBytes);
+				}
+				else{
+					encryptedInput[i] = null;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return encryptedInput;
 	}
+	
+	@Override
+	public Map<String, String> encrypt(SecretKey key, Map<String, String> dataMap){
+		if (key == null || dataMap == null){
+			return null;
+		}
+		
+		Map<String, String> encData = null;
+		if (dataMap.size() > 0){
+			try {
+				Cipher cipher = Cipher.getInstance(AES_ENCRYPTION_SCHEME);
+				cipher.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(IV));
+				BASE64Encoder base64encoder = new BASE64Encoder();
+				
+				Iterator<String> iterator = dataMap.keySet().iterator();
+				encData = new HashMap<>();
+				String mapKey = null;
+				String data = null;
+				while(iterator.hasNext()){
+					mapKey = iterator.next();
+					data = dataMap.get(mapKey);
+					if (data != null){
+						byte[] plainText = data.getBytes(UNICODE_FORMAT);
+						byte[] cipherBytes = cipher.doFinal(plainText);
+						encData.put(mapKey, base64encoder.encode(cipherBytes));
+					}
+					else{
+						encData.put(mapKey, null);
+					}
+				}
+			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | UnsupportedEncodingException | IllegalBlockSizeException | BadPaddingException e) {
+				e.printStackTrace();
+				return null;
+			}
+		}
+		
+		return encData;
+	}
 
 	/**
 	 * Method To Decrypt An Ecrypted String
 	 */
 	@Override
-	public String[] decrypt(SecretKey key, String...input) throws InvalidAttributeValueException{
+	public String[] decrypt(SecretKey key, String...input) {
 		if (input == null || key == null){
-			throw new InvalidAttributeValueException(this.getClass().getName()+": Input paramter to decrypt can not be null");
+			return null;
 		}
 		if (input.length == 0){
 			return null;
@@ -119,16 +171,65 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 			BASE64Decoder base64decoder = new BASE64Decoder();
 			
 			String data = null;
+			byte[] encryptedText = null;
+			byte[] plainText = null;
 			for (int i = 0; i<input.length; i++){
 				data = input[i];
-				byte[] encryptedText = base64decoder.decodeBuffer(data);
-				byte[] plainText = cipher.doFinal(encryptedText);
-				decryptedInput[i] = new String(plainText);
+				if (data != null){
+					encryptedText = base64decoder.decodeBuffer(data);
+					plainText = cipher.doFinal(encryptedText);
+					decryptedInput[i] = new String(plainText);
+				}
+				else{
+					decryptedInput[i] = null;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return decryptedInput;
+	}
+	
+	@Override
+	public Map<String, String> decrypt(SecretKey key, Map<String, String> encData){
+		
+		if (key == null || encData == null){
+			return null;
+		}
+		
+		if (encData.size() > 0){
+			Map<String, String> decData = null;
+			try {
+				Cipher cipher = Cipher.getInstance(AES_ENCRYPTION_SCHEME);
+				cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(IV));
+				BASE64Decoder base64decoder = new BASE64Decoder();
+				
+				Iterator<String> iterator = encData.keySet().iterator();
+				String mapKey = null;
+				String value = null;
+				byte[] encryptedText = null;
+				byte[] plainText = null;
+				decData = new HashMap<>();
+				while(iterator.hasNext()){
+					mapKey = iterator.next();
+					value = encData.get(mapKey);
+					if (value != null){
+						encryptedText = base64decoder.decodeBuffer(value);
+						plainText = cipher.doFinal(encryptedText);
+						decData.put(mapKey, new String(plainText));
+					}
+					else{
+						decData.put(mapKey, value);
+					}
+				}
+			} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IOException | IllegalBlockSizeException | BadPaddingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return decData;
+		}
+		return null;
 	}
 	
 	@Override
@@ -138,7 +239,7 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 		}
 		
 		for (String attribute : attributes){
-			if (attribute == null){
+			if (attribute == null || attribute.isEmpty()){
 				return false;
 			}
 		}

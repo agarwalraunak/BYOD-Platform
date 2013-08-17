@@ -14,12 +14,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.service.config.KerberosURLConfig;
 import com.service.config.ServiceListConfig;
+import com.service.exception.ApplicationDetailServiceUninitializedException;
+import com.service.exception.ResponseDecryptionException;
+import com.service.exception.RestClientException;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.InternalSystemException;
 import com.service.kerberos.rest.client.IKerberosAuthenticationClient;
 import com.service.kerberos.rest.client.IKerberosServiceTicketClient;
 import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.kerberos.ServiceTicket;
-import com.service.rest.exception.common.AuthenticatorValidationException;
-import com.service.rest.exception.common.InternalSystemException;
 import com.service.service.rest.client.IServiceAccessAnotherServiceClient;
 import com.service.service.rest.client.IServiceAppAuthenticationClient;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
@@ -43,7 +46,7 @@ public class ServiceAccessAnotherServiceClientTest {
 	
 	
 	@RequestMapping("/ServiceAccessAnotherServiceClientTest")
-	public void test() throws InternalSystemException, AuthenticatorValidationException{
+	public void test() throws InternalSystemException, AuthenticatorValidationException, IOException, RestClientException, ResponseDecryptionException, ApplicationDetailServiceUninitializedException{
 		
 		KerberosAppSession kerberosAppSession = iKerberosAuthenticationClient.kerberosAuthentication();
 		ServiceTicket serviceTicket = iKerberosServiceTicketClient.getServiceTicketForApp(ServiceListConfig.LOGIN_SERVER.getValue(), kerberosAppSession);

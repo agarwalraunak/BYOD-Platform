@@ -14,9 +14,10 @@ import org.springframework.stereotype.Component;
 
 import com.service.app.rest.representation.AppAuthenticationRequest;
 import com.service.app.rest.representation.AppAuthenticationResponse;
+import com.service.exception.RestClientException;
+import com.service.exception.common.InternalSystemException;
 import com.service.model.kerberos.ServiceTicket;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.InternalSystemException;
 import com.service.service.rest.api.IServiceAppAuthenticationAPI;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.service.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
@@ -71,13 +72,13 @@ private static Logger log = Logger.getLogger(ServiceAppAuthenticationClientImpl.
 		AppAuthenticationResponse response;
 		try {
 			response = (AppAuthenticationResponse)iConnectionManager.generateRequest(url, RequestMethod.POST_REQUEST_METHOD, ContentType.APPLICATION_JSON, AppAuthenticationResponse.class, iConnectionManager.generateJSONStringForObject(request));
-		} catch (IOException e) {
+		} catch (IOException | RestClientException e) {
 			log.error("Application Authentication Failed\n"+e.getMessage());
 			e.printStackTrace();
 			throw new InternalSystemException();
-		}
-		
-		serviceSession = iServiceAppAuthenticationAPI.processAuthenticateAppResponse(response.getEncAppSessionID(), response.getEncResponseAuthenticator(), iDateUtil.generateDateFromString(requestAuthenticator),
+		}		
+		serviceSession = iServiceAppAuthenticationAPI.processAuthenticateAppResponse(response.getEncAppSessionID(), response.getEncResponseAuthenticator(), response.getEncExpiryTime(),
+				iDateUtil.generateDateFromString(requestAuthenticator),
 				serviceTicket, serviceSessionKey);
 		if (serviceSession == null){
 			throw new InternalSystemException();

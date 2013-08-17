@@ -13,9 +13,12 @@ public class Session {
 	
 	private String sessionID;
 	private Date created;
+	private boolean isActive;
+	protected Date expiryTime;
 	
 	public Session() {
 		created = new Date();
+		isActive = true;
 	}
 	
 	/**
@@ -41,5 +44,32 @@ public class Session {
 	 */
 	public void setCreated(Date created) {
 		this.created = created;
+	}
+	/**
+	 * @return the isActive
+	 */
+	public boolean isActive() {
+		return isActive;
+	}
+
+	/**
+	 * @param isActive the isActive to set
+	 */
+	public void setActive(boolean isActive) {
+		this.isActive = isActive;
+	}
+
+	/**
+	 * @return the expiryTime
+	 */
+	public Date getExpiryTime() {
+		return expiryTime;
+	}
+
+	/**
+	 * @param expiryTime the expiryTime to set
+	 */
+	public void setExpiryTime(Date expiryTime) {
+		this.expiryTime = expiryTime;
 	}
 }

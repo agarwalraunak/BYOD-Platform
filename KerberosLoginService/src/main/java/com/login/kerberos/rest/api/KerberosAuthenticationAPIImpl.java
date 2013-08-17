@@ -9,12 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.crypto.SecretKey;
-import javax.management.InvalidAttributeValueException;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.login.app.rest.representation.AppAuthenticationResponse;
+import com.login.exception.ResponseDecryptionException;
+import com.login.exception.RestClientException;
 import com.login.kerberos.rest.representation.AuthenticationResponse;
 import com.login.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.login.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
@@ -60,10 +62,12 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 	}	
 	
 	@Override
-	public Map<AuthenticationResponseAttributes, String> authenticate(String url, String loginName, String password, boolean isApplication) throws IOException, NoSuchAlgorithmException, InvalidAttributeValueException{
+	public Map<AuthenticationResponseAttributes, String> authenticate(String url, String loginName, String password) throws IOException, ResponseDecryptionException, RestClientException {
+		
+		log.debug("Entering authenticate");
 		
 		if (!iEncryptionUtil.validateDecryptedAttributes(url, loginName, password)){
-			throw new InvalidAttributeValueException("Invalid input parameters to authenticate method");
+			return null;
 		}
 		
 		String authenticationUrl = new StringBuilder(url).append(loginName).toString();
@@ -78,16 +82,23 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 	}
 
 	@Override
-	public SecretKey generatePasswordSymmetricKey(String loginAppName, String appPassword) throws NoSuchAlgorithmException, InvalidAttributeValueException{
+	public SecretKey generatePasswordSymmetricKey(String loginAppName, String appPassword)  {
 		
 		log.debug("Entering generatePasswordSymmetricKey method");
 		
 		if (!iEncryptionUtil.validateDecryptedAttributes(loginAppName, appPassword)){
 			log.error("Invalid Input parameter to generatePasswordSymmetricKey");
-			throw new InvalidAttributeValueException("Invalid Input parameter to generatePasswordSymmetricKey");
+			return null;
 		}
 		
-		byte[] hashedPasswordPhraseBytes = iHashUtil.getHashWithSalt(appPassword, HashingTechqniue.SSHA256, iHashUtil.stringToByte(loginAppName));
+		byte[] hashedPasswordPhraseBytes;
+		try {
+			hashedPasswordPhraseBytes = iHashUtil.getHashWithSalt(appPassword, HashingTechqniue.SSHA256, iHashUtil.stringToByte(loginAppName));
+		} catch (NoSuchAlgorithmException e) {
+			log.error("Error generating SecretKey for Kerberos Authentication");
+			e.printStackTrace();
+			return null;
+		}
 		String hashPasswordPhrase = iHashUtil.bytetoString(hashedPasswordPhraseBytes);
 		SecretKey passwordSymmetricKey = iEncryptionUtil.generateSecretKey(hashPasswordPhrase);
 
@@ -96,13 +107,17 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 		return passwordSymmetricKey;
 	}
 	
-	public Map<AuthenticationResponseAttributes, String> decryptAuthenticationResponse(AuthenticationResponse response, SecretKey key) throws InvalidAttributeValueException{
+	public Map<AuthenticationResponseAttributes, String> decryptAuthenticationResponse(AuthenticationResponse response, SecretKey key) throws ResponseDecryptionException {
 		
 		log.debug("Entering decryptAuthenticationResponse");
+		if (response == null || key == null){
+			log.error("Illegal Arguments provided to decryptAuthenticationResponse");
+			throw new IllegalArgumentException("Illegal Arguments provided to decryptAuthenticationResponse");
+		}
 		
 		String[] decryptedData = iEncryptionUtil.decrypt(key, response.getEncTgtPacket(), response.getEncSessionKey(), response.getEncLoginName());
 		if (decryptedData == null){
-			return null;
+			throw new ResponseDecryptionException(AppAuthenticationResponse.class, "decryptAuthenticationResponse", getClass());
 		}
 		String tgtPacket = decryptedData[0];
 		String sessionKey = decryptedData[1];
@@ -119,13 +134,13 @@ public class KerberosAuthenticationAPIImpl implements IKerberosAuthenticationAPI
 		return responseAttributes;
 	}
 	
-	public Map<AuthenticationResponseAttributes, String> processAuthenticationResponse(String loginAppName, String appPassword, AuthenticationResponse response) throws NoSuchAlgorithmException, InvalidAttributeValueException{
+	public Map<AuthenticationResponseAttributes, String> processAuthenticationResponse(String loginAppName, String appPassword, AuthenticationResponse response) throws ResponseDecryptionException   {
 
 		log.debug("Entering processAuthenticationResponse method");
 		
 		if(!iEncryptionUtil.validateDecryptedAttributes(loginAppName, appPassword) || response == null){
 			log.debug("Invalid input parameter processAuthenticationResponse method");
-			throw new InvalidAttributeValueException("Invalid input parameter to processAuthenticationResponse");
+			return null;
 		}
 		
 		SecretKey passwordSymmetricKey = generatePasswordSymmetricKey(loginAppName, appPassword);

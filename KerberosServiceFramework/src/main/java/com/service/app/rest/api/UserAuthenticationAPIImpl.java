@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 
 import com.service.app.rest.representation.UserServiceAuthenticationRequest;
 import com.service.app.rest.representation.UserServiceAuthenticationResponse;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.InvalidRequestException;
 import com.service.model.app.AppSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
-import com.service.rest.exception.common.InvalidRequestException;
 import com.service.util.dateutil.IDateUtil;
 import com.service.util.encryption.IEncryptionUtil;
 import com.service.util.hashing.IHashUtil;

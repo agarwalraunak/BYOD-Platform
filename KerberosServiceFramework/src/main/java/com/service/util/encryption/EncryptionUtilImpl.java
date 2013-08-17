@@ -98,9 +98,14 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 			String data = null;
 			for (int i = 0; i<input.length; i++){
 				data = input[i];
-				byte[] plainText = data.getBytes(UNICODE_FORMAT);
-				byte[] cipherBytes = cipher.doFinal(plainText);
-				encryptedInput[i] = base64encoder.encode(cipherBytes);
+				if (data != null){
+					byte[] plainText = data.getBytes(UNICODE_FORMAT);
+					byte[] cipherBytes = cipher.doFinal(plainText);
+					encryptedInput[i] = base64encoder.encode(cipherBytes);
+				}
+				else{
+					encryptedInput[i] = null;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -128,9 +133,14 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 				while(iterator.hasNext()){
 					mapKey = iterator.next();
 					data = dataMap.get(mapKey);
-					byte[] plainText = data.getBytes(UNICODE_FORMAT);
-					byte[] cipherBytes = cipher.doFinal(plainText);
-					encData.put(mapKey, base64encoder.encode(cipherBytes));
+					if (data != null){
+						byte[] plainText = data.getBytes(UNICODE_FORMAT);
+						byte[] cipherBytes = cipher.doFinal(plainText);
+						encData.put(mapKey, base64encoder.encode(cipherBytes));
+					}
+					else{
+						encData.put(mapKey, null);
+					}
 				}
 			} catch (InvalidKeyException | InvalidAlgorithmParameterException | NoSuchAlgorithmException | NoSuchPaddingException | UnsupportedEncodingException | IllegalBlockSizeException | BadPaddingException e) {
 				e.printStackTrace();
@@ -165,9 +175,14 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 			byte[] plainText = null;
 			for (int i = 0; i<input.length; i++){
 				data = input[i];
-				encryptedText = base64decoder.decodeBuffer(data);
-				plainText = cipher.doFinal(encryptedText);
-				decryptedInput[i] = new String(plainText);
+				if (data != null){
+					encryptedText = base64decoder.decodeBuffer(data);
+					plainText = cipher.doFinal(encryptedText);
+					decryptedInput[i] = new String(plainText);
+				}
+				else{
+					decryptedInput[i] = null;
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -198,9 +213,14 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 				while(iterator.hasNext()){
 					mapKey = iterator.next();
 					value = encData.get(mapKey);
-					encryptedText = base64decoder.decodeBuffer(value);
-					plainText = cipher.doFinal(encryptedText);
-					decData.put(mapKey, new String(plainText));
+					if (value != null){
+						encryptedText = base64decoder.decodeBuffer(value);
+						plainText = cipher.doFinal(encryptedText);
+						decData.put(mapKey, new String(plainText));
+					}
+					else{
+						decData.put(mapKey, value);
+					}
 				}
 			} catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IOException | IllegalBlockSizeException | BadPaddingException e) {
 				// TODO Auto-generated catch block
@@ -219,7 +239,7 @@ public class EncryptionUtilImpl implements IEncryptionUtil {
 		}
 		
 		for (String attribute : attributes){
-			if (attribute == null){
+			if (attribute == null || attribute.isEmpty()){
 				return false;
 			}
 		}

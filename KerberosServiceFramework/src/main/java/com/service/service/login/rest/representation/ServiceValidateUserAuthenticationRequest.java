@@ -13,11 +13,25 @@ public class ServiceValidateUserAuthenticationRequest {
 	 * Encrypted with App Login Session ID
 	 */
 	private String encUserLoginSessionID;
+	private String encAppSessionID;
 	private String appID;
 	/*
 	 * Encrypted with App Login Session ID
 	 */
 	private String encAuthenticator;
+	
+	/**
+	 * @return the encAppSessionID
+	 */
+	public String getEncAppSessionID() {
+		return encAppSessionID;
+	}
+	/**
+	 * @param encAppSessionID the encAppSessionID to set
+	 */
+	public void setEncAppSessionID(String encAppSessionID) {
+		this.encAppSessionID = encAppSessionID;
+	}
 	/**
 	 * @return the encUserLoginSessionID
 	 */

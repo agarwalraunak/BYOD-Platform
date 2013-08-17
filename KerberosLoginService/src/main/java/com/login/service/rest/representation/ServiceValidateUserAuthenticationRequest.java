@@ -3,59 +3,27 @@
  */
 package com.login.service.rest.representation;
 
+import com.login.rest.representation.AppRestServiceRequest;
+
 /**
  * @author raunak
  *
  */
-public class ServiceValidateUserAuthenticationRequest {
+public class ServiceValidateUserAuthenticationRequest extends AppRestServiceRequest {
 	
-	/*
-	 * Encrypted with App Login Session ID
-	 */
 	private String encUserLoginSessionID;
-	private String appID;
-	/*
-	 * Encrypted with App Login Session ID
-	 */
-	private String encAuthenticator;
 	/**
-	 * @return the encUserLoginSessionID
+	 * @return
+	 * <code>String</code> encUserLoginSessionID encrypted with App Session ID
 	 */
 	public String getEncUserLoginSessionID() {
 		return encUserLoginSessionID;
 	}
 	/**
-	 * @param encUserLoginSessionID the encUserLoginSessionID to set
+	 * @param 
+	 * <code>String</code> encUserLoginSessionID encrypted with App Session ID
 	 */
 	public void setEncUserLoginSessionID(String encUserLoginSessionID) {
 		this.encUserLoginSessionID = encUserLoginSessionID;
 	}
-	/**
-	 * @return the appID
-	 */
-	public String getAppID() {
-		return appID;
-	}
-	/**
-	 * @param appID the appID to set
-	 */
-	public void setAppID(String appID) {
-		this.appID = appID;
-	}
-	/**
-	 * @return the encAuthenticator
-	 */
-	public String getEncAuthenticator() {
-		return encAuthenticator;
-	}
-	/**
-	 * @param encAuthenticator the encAuthenticator to set
-	 */
-	public void setEncAuthenticator(String encAuthenticator) {
-		this.encAuthenticator = encAuthenticator;
-	}
-	
-	
-	
-
 }

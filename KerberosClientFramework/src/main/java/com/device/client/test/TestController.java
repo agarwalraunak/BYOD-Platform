@@ -11,21 +11,26 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.device.config.KerberosURLConfig;
 import com.device.config.ServiceListConfig;
+import com.device.exception.ApplicationDetailServiceUninitializedException;
+import com.device.exception.InvalidResponseAuthenticatorException;
+import com.device.exception.ResponseDecryptionException;
+import com.device.exception.RestClientException;
+import com.device.exception.UnauthenticatedUserException;
+import com.device.exception.UnauthorizedResponseException;
 import com.device.kerberos.model.KerberosSessionManager;
 import com.device.kerberos.model.ServiceTicket;
-import com.device.kerberos.rest.client.KerberosAuthenticationClient;
-import com.device.kerberos.rest.client.KerberosRequestServiceTicketClient;
-import com.device.login.rest.client.LoginServerUserAuthenticationClient;
-import com.device.rest.exceptions.UnauthorizedRequestException;
-import com.device.rest.exceptions.UnauthorizedResponseException;
+import com.device.kerberos.rest.client.IKerberosAuthenticationClient;
+import com.device.kerberos.rest.client.IKerberosRequestServiceTicketClient;
+import com.device.login.rest.client.ILoginServerUserAuthenticationClient;
 import com.device.service.model.AppSession;
 import com.device.service.model.UserSession;
-import com.device.service.rest.client.AccessServiceClient;
-import com.device.service.rest.client.ServiceAppAuthenticationClient;
-import com.device.service.rest.client.ServiceUserAuthenticationClient;
+import com.device.service.rest.client.AccessServiceClientImpl;
+import com.device.service.rest.client.IServiceAppAuthenticationClient;
+import com.device.service.rest.client.IServiceUserAuthenticationClient;
 import com.device.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.device.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
 
@@ -33,47 +38,74 @@ import com.device.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
 @RequestMapping("/test")
 public class TestController {
 	
-	private @Autowired KerberosAuthenticationClient client;
-	private @Autowired KerberosRequestServiceTicketClient rstClient;
+	private @Autowired IKerberosAuthenticationClient iKerberosAuthenticationClient;
+	private @Autowired IKerberosRequestServiceTicketClient iKerberosRequestServiceTicketClient;
 	private @Autowired KerberosSessionManager kerberosSessionManager;
-	private @Autowired ServiceAppAuthenticationClient serviceAppAuthenticationClient;
-	private @Autowired ServiceUserAuthenticationClient serviceUserAuthenticationClient;
-	private @Autowired LoginServerUserAuthenticationClient loginServerUserAuthenticationClient;
+	private @Autowired IServiceAppAuthenticationClient iServiceAppAuthenticationClient;
+	private @Autowired IServiceUserAuthenticationClient iServiceUserAuthenticationClient;
+	private @Autowired ILoginServerUserAuthenticationClient iLoginServerUserAuthenticationClient;
 	private @Autowired KerberosURLConfig kerberosURLConfig;
-	private @Autowired AccessServiceClient accessServiceClient;
+	private @Autowired AccessServiceClientImpl accessServiceClientImpl;
 	
 	private static Logger log = Logger.getLogger(TestController.class);
 	
 	@RequestMapping(method=org.springframework.web.bind.annotation.RequestMethod.GET)
-	public String test() throws IOException{
+	public @ResponseBody String test() throws IOException, ResponseDecryptionException, ApplicationDetailServiceUninitializedException, UnauthorizedResponseException, InvalidResponseAuthenticatorException, UnauthenticatedUserException, InvalidAttributeValueException {
+		//Kerberos App Authentication
+		log.debug(" Performing App Kerberos Authentication");
 		try {
-			//Kerberos App Authentication
-			log.debug(" Performing App Kerberos Authentication");
-			if (client.authenticateApp()){
+			if (iKerberosAuthenticationClient.kerberosAuthentication()){
 				//Kerberos Session ID
-				System.out.println(kerberosSessionManager.getAppSession().getSessionID());
+				System.out.println(kerberosSessionManager.getKerberosAppSession().getSessionID());
+
 				//Get the Service Ticket for Service from Kerberos
 				log.debug(" Fetching Service Ticket for APP");
-				ServiceTicket ticket = rstClient.getServiceTicketForApp(ServiceListConfig.LOGIN_SERVER.getValue());
+				ServiceTicket ticket = iKerberosRequestServiceTicketClient.getServiceTicketForApp(ServiceListConfig.LOGIN_SERVER.getValue(), kerberosSessionManager.getKerberosAppSession());
+				if (ticket == null){
+					System.out.println("Failed to get the service ticket for login server");
+				} else{
+					System.out.println("Got the service ticket for login server");
+				}
+
 				//App and Service Mutual Authentication
 				log.debug(" Authenticating Login Server Service Ticket");
-				AppSession appSession = serviceAppAuthenticationClient.authenticateAppServiceTicket(kerberosURLConfig.getLOGIN_SERVICE_APP_AUTHENTICATION_URL(), ticket);
+				AppSession appSession = iServiceAppAuthenticationClient.authenticateAppServiceTicket(kerberosURLConfig.getLOGIN_SERVICE_APP_AUTHENTICATION_URL(), ticket);
+				if (appSession != null)
+					System.out.println("App Login Service Authentication success "+appSession.getSessionID());
+				else{
+					System.out.println("App Login Service authentication failed");
+				}
+				
 				//Login Server User Authentication
 				log.debug("Performing User Authentication at Login Server");
-				UserSession serviceSession = loginServerUserAuthenticationClient.authenticateUser(kerberosURLConfig.getLOGIN_SERVICE_USER_AUTHENTICATION_URL(), appSession, ticket.getServiceSessionID(), "Sam.Bolt@gmail.com", "testPassword");
+				UserSession userLoginServerSession = iLoginServerUserAuthenticationClient.authenticateUser(kerberosURLConfig.getLOGIN_SERVICE_USER_AUTHENTICATION_URL(), appSession, ticket.getServiceSessionID(), "Sam.Bolt@gmail.com", "testPassword");
 				//Service Session ID's for app and service
-				System.out.println(appSession.getSessionID());
-				System.out.println(serviceSession.getUserSessionID());
+				if (userLoginServerSession != null)
+					System.out.println("User Login service authentication successfull "+userLoginServerSession.getUserSessionID());
+				else
+					System.out.println("User Login Service Authentication failed");
 				
 				
 				//Get the Service Ticket for Service from Kerberos
 				log.debug(" Fetching Service Ticket for ServiceSecurity");
-				ServiceTicket serviceTicket = rstClient.getServiceTicketForApp("ServiceSecurity");
+				ServiceTicket serviceTicket = iKerberosRequestServiceTicketClient.getServiceTicketForApp("ServiceSecurity", kerberosSessionManager.getKerberosAppSession());
+				if (serviceTicket == null){
+					System.out.println("Failed to get the service ticket for service");
+				} else{
+					System.out.println("Got the service ticket for service");
+				}
+				
 				//App and Service Mutual Authentication
 				log.debug("Authenticating Service Security Service Ticket for APP");
-				AppSession appServiceSession = serviceAppAuthenticationClient.authenticateAppServiceTicket("http://localhost:8080/service/orange/authenticate/app/serviceTicket/", serviceTicket);
+				AppSession appServiceSession = iServiceAppAuthenticationClient.authenticateAppServiceTicket("http://localhost:8080/service/orange/authenticate/app/serviceTicket/", serviceTicket);
+				if (appServiceSession == null){
+					System.out.println("App and Service Mutual authentication failed");
+				} else{
+					System.out.println("App and Service Mutual authentication success "+appServiceSession.getSessionID());
+				}
+				
 				//Login Server User Authentication
-				if (serviceUserAuthenticationClient.serviceUserAuthentication("http://localhost:8080/service/orange/authenticate/user/", serviceSession, appServiceSession)){
+				if (iServiceUserAuthenticationClient.serviceUserAuthentication("http://localhost:8080/service/orange/authenticate/user/", userLoginServerSession, appServiceSession)){
 					System.out.println("Service User Authentication success");
 				}
 				else{
@@ -84,7 +116,9 @@ public class TestController {
 				Map<String, String> data = new HashMap<>();
 				data.put("test", "testValue");
 				log.debug("Access Service Security Service Ticket for APP");
-				data = accessServiceClient.accessService("http://localhost:8080/service/orange/test123/restservice/", RequestMethod.POST_REQUEST_METHOD, ContentType.APPLICATION_JSON, serviceTicket, "Sam.Bolt@gmail.com", data);
+				data = accessServiceClientImpl.accessService("http://localhost:8080/service/orange/test123/restservice/", RequestMethod.POST_REQUEST_METHOD, 
+						ContentType.APPLICATION_JSON, appServiceSession, serviceTicket.getServiceSessionID(), 
+						appServiceSession.findActiveUserServiceSessionByUsername("Sam.Bolt@gmail.com"), data);
 				//Looping through the response data
 				Iterator<String> iterator = data.keySet().iterator();
 				String skey = null;
@@ -94,10 +128,13 @@ public class TestController {
 				}
 				return "redirect:http://www.google.com";
 			}
-		} catch (InvalidAttributeValueException | UnauthorizedResponseException | UnauthorizedRequestException e) {
+		} catch (RestClientException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return "Message: "+e.getErrorMessage()+" Error Code: "+e.getErrorCode();
 		}
-		return "redirect:http://www.google.com";
+
+		return "Tests were successfull";
 	}
 
 }

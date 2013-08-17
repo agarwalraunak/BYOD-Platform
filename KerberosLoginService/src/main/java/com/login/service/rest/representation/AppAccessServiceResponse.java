@@ -2,37 +2,26 @@ package com.login.service.rest.representation;
 
 import java.util.Map;
 
+import com.login.rest.representation.RestServiceResponse;
+
 /**
  * @author raunak
  *
  */
-public class AppAccessServiceResponse {
+public class AppAccessServiceResponse extends RestServiceResponse {
 
-	/*
-	 * Attributes encrypted using App Session ID
-	 */
-	private String encResponseAuthenticator;
 	private Map<String, String> encResponseData;
+	
 	/**
-	 * @return the encResponseAuthenticator
-	 */
-	public String getEncResponseAuthenticator() {
-		return encResponseAuthenticator;
-	}
-	/**
-	 * @param encResponseAuthenticator the encResponseAuthenticator to set
-	 */
-	public void setEncResponseAuthenticator(String encResponseAuthenticator) {
-		this.encResponseAuthenticator = encResponseAuthenticator;
-	}
-	/**
-	 * @return the encResponseData
+	 * @return
+	 * <code>Map<String, String></code> Response Data encrypted with <strong>App Session ID</strong>
 	 */
 	public Map<String, String> getEncResponseData() {
 		return encResponseData;
 	}
 	/**
-	 * @param encResponseData the encResponseData to set
+	 * @param 
+	 * <code>Map<String, String></code> Response Data encrypted with <strong>App Session ID</strong>
 	 */
 	public void setEncResponseData(Map<String, String> encResponseData) {
 		this.encResponseData = encResponseData;

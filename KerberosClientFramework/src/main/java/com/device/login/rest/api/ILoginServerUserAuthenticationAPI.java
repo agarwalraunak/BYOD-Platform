@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import javax.management.InvalidAttributeValueException;
 
+import com.device.exception.InvalidResponseAuthenticatorException;
 import com.device.login.rest.representation.UserLoginRequest;
 import com.device.service.model.AppSession;
 import com.device.service.model.UserSession;
@@ -25,21 +26,25 @@ public interface ILoginServerUserAuthenticationAPI {
 	UserLoginRequest createUserLoginRequest(String username, String password,
 			String requestAuthenticationStr, String appSessionID,
 			String appUsername, SecretKey appSessionIDKey,
-			SecretKey serviceSessionKey) throws InvalidAttributeValueException;
+			SecretKey serviceSessionKey) ;
+
+
 
 	/**
 	 * @param encUsername
 	 * @param encUserSessionID
 	 * @param encResponseAuthenticator
+	 * @param encExpiryTime
 	 * @param appSession
 	 * @param requestAuthenticator
 	 * @param appSessionIDKey
 	 * @return
-	 * @throws InvalidAttributeValueException
+	 * @throws InvalidResponseAuthenticatorException
 	 */
 	UserSession processUserLoginResponse(String encUsername,
 			String encUserSessionID, String encResponseAuthenticator,
-			AppSession appSession, Date requestAuthenticator,
-			SecretKey appSessionIDKey) throws InvalidAttributeValueException;
+			String encExpiryTime, AppSession appSession,
+			Date requestAuthenticator, SecretKey appSessionIDKey)
+			throws InvalidResponseAuthenticatorException;
 
 }

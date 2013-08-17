@@ -7,15 +7,19 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Map;
 
+import javax.ws.rs.core.Response;
+
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.service.exception.RestClientException;
+import com.service.exception.common.AuthenticatorValidationException;
+import com.service.exception.common.InternalSystemException;
 import com.service.kerberos.rest.client.IKerberosAuthenticationClient;
 import com.service.kerberos.rest.client.IKerberosServiceTicketClient;
 import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
-import com.service.rest.exception.common.AuthenticatorValidationException;
 import com.service.service.rest.api.IAppAccessServiceAPI;
 import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.service.rest.representation.AppAccessServiceResponse;
@@ -42,7 +46,7 @@ public class ServiceAccessAnotherServiceClientImpl implements IServiceAccessAnot
 	
 	@Override
 	public Map<String, String> contactAnotherService(String url, RequestMethod requestMethod, ContentType contentType, String serviceName, KerberosAppSession kerberosAppSession, String serviceSessionID,
-			ServiceSession serviceSession, Map<String, String> requestData) throws IOException, AuthenticatorValidationException{
+			ServiceSession serviceSession, Map<String, String> requestData) throws IOException, AuthenticatorValidationException, InternalSystemException{
 		
 		log.debug("Entering contactAnotherService");
 		
@@ -57,7 +61,16 @@ public class ServiceAccessAnotherServiceClientImpl implements IServiceAccessAnot
 		
 		AppAccessServiceRequest request = iAppAccessServiceAPI.generateAppAccessServiceRequest(kerberosAppSession, serviceSessionID, serviceSession, requestAuthenticator, requestData);
 		
-		AppAccessServiceResponse response = (AppAccessServiceResponse)iConnectionManager.generateRequest(url, requestMethod, contentType, AppAccessServiceResponse.class, iConnectionManager.generateJSONStringForObject(request));
+		AppAccessServiceResponse response;
+		try {
+			response = (AppAccessServiceResponse)iConnectionManager.generateRequest(url, requestMethod, contentType, AppAccessServiceResponse.class, iConnectionManager.generateJSONStringForObject(request));
+		} catch (RestClientException e) {
+			e.printStackTrace();
+			if (e.getErrorCode() == Response.Status.UNAUTHORIZED.getStatusCode()){
+				serviceSession.setActive(false);
+			}
+			throw new InternalSystemException();
+		}
 
 		log.debug("Returning from contactAnotherService");
 		
