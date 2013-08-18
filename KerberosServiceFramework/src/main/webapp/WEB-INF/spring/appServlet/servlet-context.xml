@@ -38,5 +38,6 @@
 		<beans:constructor-arg name="kERBEROS_KEY_SERVER_KEY_REQUEST_URL"  value="${KERBEROS_KEY_SERVER_KEY_REQUEST_URL}"/>
 		<beans:constructor-arg name="lOGIN_SERVER_APP_AUTHENTICATION_URL" value="${LOGIN_SERVER_APP_AUTHENTICATION_URL}"/>
 		<beans:constructor-arg name="lOGIN_SERVER_USER_AUTHENTICATION_URL" value="${LOGIN_SERVER_USER_AUTHENTICATION_URL}"/>
+		<beans:constructor-arg name="lOGIN_SERVER_RETRIEVE_USER_INFO_URL" value="${LOGIN_SERVER_RETRIEVE_USER_INFO_URL}"/>
 	</beans:bean>	
 </beans:beans>

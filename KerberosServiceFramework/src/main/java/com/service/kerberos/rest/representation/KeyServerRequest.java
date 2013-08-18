@@ -3,14 +3,13 @@
  */
 package com.service.kerberos.rest.representation;
 
-import com.service.rest.representation.KerberosRequestRepresentation;
 
 
 /**
  * @author raunak
  *
  */
-public class KeyServerRequest extends KerberosRequestRepresentation{
+public class KeyServerRequest {
 
 	private String keyType;
 	private String encServiceTicket;

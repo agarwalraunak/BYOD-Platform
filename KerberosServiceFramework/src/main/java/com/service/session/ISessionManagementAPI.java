@@ -19,6 +19,7 @@ import com.service.exception.common.UnauthenticatedUserException;
 import com.service.exception.common.UserSessionExpiredException;
 import com.service.model.app.AppSession;
 import com.service.model.app.UserSession;
+import com.service.service.rest.representation.AppAccessServiceRequest;
 
 /**
  * This interface provides the required methods to perform session management
@@ -72,7 +73,7 @@ public interface ISessionManagementAPI {
 	 * @throws UnauthenticatedUserException 
 	 * @throws UnauthenticatedAppException 
 	 */
-	UserAccessServiceRequest validateAccessServiceRequest(
+	UserAccessServiceRequest validateUserAccessServiceRequest(
 			UserAccessServiceRequest request) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException;
 
 
@@ -124,6 +125,19 @@ public interface ISessionManagementAPI {
 	 * @return
 	 */
 	<T> T identifyResponse(String restServiceResponse, Class<T> clazz);
+
+
+	/**
+	 * @param request
+	 * @return
+	 * @throws UnauthenticatedAppException
+	 * @throws UnauthenticatedUserException
+	 * @throws AuthenticatorValidationException
+	 */
+	AppAccessServiceRequest validateAppAccessServiceRequest(
+			AppAccessServiceRequest request)
+			throws UnauthenticatedAppException, UnauthenticatedUserException,
+			AuthenticatorValidationException;
 
 
 

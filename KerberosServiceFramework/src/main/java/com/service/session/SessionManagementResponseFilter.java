@@ -16,6 +16,7 @@ import com.service.app.rest.representation.UserServiceAuthenticationResponse;
 import com.service.model.SessionDirectory;
 import com.service.model.app.AppSession;
 import com.service.model.app.UserSession;
+import com.service.service.rest.representation.AppAccessServiceResponse;
 import com.service.session.SessionManagementAPIImpl.RequestParam;
 import com.service.util.dateutil.IDateUtil;
 import com.service.util.encryption.IEncryptionUtil;
@@ -71,6 +72,27 @@ public class SessionManagementResponseFilter implements ContainerResponseFilter 
 			
 			response.setEntity(userAuthResponse);
 			
+		}
+		else if (unknownRestResponse instanceof AppAccessServiceResponse){
+			
+			AppAccessServiceResponse accessResponse = (AppAccessServiceResponse) response.getEntity();
+			
+			AppSession appSession = (AppSession)httpRequest.getAttribute(RequestParam.APP_SESSION.getValue());
+			String requestAuthenticatorStr = (String)httpRequest.getAttribute(RequestParam.REQUEST_AUTHENTICATOR.getValue());
+			
+			SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(appSession.getSessionID());
+			Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
+			
+			Date responseAuthenticator = iDateUtil.createResponseAuthenticator(requestAuthenticator);
+			String responseAuthenticatorStr = iDateUtil.generateStringFromDate(responseAuthenticator);
+			
+			String encResponseAuthenticator = iEncryptionUtil.encrypt(appSessionKey, responseAuthenticatorStr)[0];
+			Map<String, String> encData = iEncryptionUtil.encrypt(appSessionKey, accessResponse.getEncResponseData());
+			
+			accessResponse.setEncResponseData(encData);;
+			accessResponse.setEncResponseAuthenticator(encResponseAuthenticator);;
+			
+			response.setEntity(accessResponse);
 		}
 		else if (unknownRestResponse instanceof UserAccessServiceResponse){
 		

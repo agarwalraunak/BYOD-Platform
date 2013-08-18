@@ -33,6 +33,7 @@ import com.service.model.app.AppSession;
 import com.service.model.app.ClientSession;
 import com.service.model.app.Request;
 import com.service.model.app.UserSession;
+import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.util.dateutil.IDateUtil;
 import com.service.util.encryption.IEncryptionUtil;
 
@@ -143,7 +144,7 @@ public class SessionManagementAPIImpl implements ISessionManagementAPI {
 	}
 	
 	@Override
-	public UserAccessServiceRequest validateAccessServiceRequest(UserAccessServiceRequest request) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException{
+	public UserAccessServiceRequest validateUserAccessServiceRequest(UserAccessServiceRequest request) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException{
 		
 		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(request.getAppID());
 		if (appSession == null){
@@ -199,6 +200,53 @@ public class SessionManagementAPIImpl implements ISessionManagementAPI {
 		return request;
 	}
 	
+	@Override
+	public AppAccessServiceRequest validateAppAccessServiceRequest(AppAccessServiceRequest request) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException{
+		
+		AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(request.getAppID());
+		if (appSession == null){
+			throw new UnauthenticatedAppException();
+		}
+		
+		String encAppSessionID = request.getEncAppSessionID();		
+		//Decrypting the AppSessionID
+		SecretKey serviceSessionKey = iEncryptionUtil.generateSecretKey(appSession.getKerberosServiceSessionID());
+		String decAppSessionID = iEncryptionUtil.decrypt(serviceSessionKey, encAppSessionID)[0];		
+		
+		//Validate the decrypted App Session ID
+		if (decAppSessionID == null || decAppSessionID.isEmpty() || !decAppSessionID.equals(appSession.getSessionID())){
+			throw new UnauthenticatedAppException();
+		}
+
+		String encRequestAuthenticator = request.getEncAuthenticator();
+		//Decrypt the request information
+		SecretKey appSessionKey = iEncryptionUtil.generateSecretKey(appSession.getSessionID());
+		String[] decryptedData = iEncryptionUtil.decrypt(appSessionKey, encRequestAuthenticator);
+		
+		//Validate the decrypted attributes
+		if (!iEncryptionUtil.validateDecryptedAttributes(decryptedData)){
+			throw new UnauthenticatedAppException();
+		}
+		
+		//Validate the authenticator
+		String requestAuthenticatorStr = decryptedData[0];
+		Date requestAuthenticator = iDateUtil.generateDateFromString(requestAuthenticatorStr);
+		if (!appSession.validateAuthenticator(requestAuthenticator)){
+			throw new AuthenticatorValidationException();
+		}
+		
+		//Finally decrypting the data
+		Map<String, String> encData = request.getData();
+		Map<String, String> decData = iEncryptionUtil.decrypt(appSessionKey, encData);
+		
+		//Setting the decrypted information in the request
+		request.setData(decData);
+		request.setEncAppSessionID(decAppSessionID);
+		request.setEncAuthenticator(requestAuthenticatorStr);
+
+		return request;
+	}
+	
 	
 	@Override
 	public HttpServletRequest addAttributesToRequest(HttpServletRequest httpRequest, Object entity){
@@ -212,7 +260,12 @@ public class SessionManagementAPIImpl implements ISessionManagementAPI {
 			httpRequest.setAttribute(RequestParam.REQUEST_AUTHENTICATOR.getValue(), validatedRequest.getEncAuthenticator());
 			httpRequest.setAttribute(RequestParam.APP_SESSION.getValue(), sessionDirectory.findActiveAppSessionByAppID(validatedRequest.getAppID()));
 		}
-		
+		if (entity instanceof AppAccessServiceRequest){
+			AppAccessServiceRequest validatedRequest = (AppAccessServiceRequest) entity;
+			httpRequest.setAttribute(RequestParam.REQUEST_AUTHENTICATOR.getValue(), validatedRequest.getEncAuthenticator());
+			httpRequest.setAttribute(RequestParam.APP_SESSION.getValue(), sessionDirectory.findActiveAppSessionByAppID(validatedRequest.getAppID()));
+		}
+
 		if (entity instanceof UserAccessServiceRequest){
 			UserAccessServiceRequest validatedRequest = (UserAccessServiceRequest) entity;
 			AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(validatedRequest.getAppID());

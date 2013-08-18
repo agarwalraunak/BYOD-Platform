@@ -28,7 +28,8 @@ import com.device.kerberos.rest.client.IKerberosRequestServiceTicketClient;
 import com.device.login.rest.client.ILoginServerUserAuthenticationClient;
 import com.device.service.model.AppSession;
 import com.device.service.model.UserSession;
-import com.device.service.rest.client.AccessServiceClientImpl;
+import com.device.service.rest.client.IServiceAccessAnotherServiceClient;
+import com.device.service.rest.client.IUserAccessServiceClient;
 import com.device.service.rest.client.IServiceAppAuthenticationClient;
 import com.device.service.rest.client.IServiceUserAuthenticationClient;
 import com.device.util.connectionmanager.ConnectionManagerImpl.ContentType;
@@ -45,7 +46,8 @@ public class TestController {
 	private @Autowired IServiceUserAuthenticationClient iServiceUserAuthenticationClient;
 	private @Autowired ILoginServerUserAuthenticationClient iLoginServerUserAuthenticationClient;
 	private @Autowired KerberosURLConfig kerberosURLConfig;
-	private @Autowired AccessServiceClientImpl accessServiceClientImpl;
+	private @Autowired IUserAccessServiceClient iUserAccessServiceClient;
+	private @Autowired IServiceAccessAnotherServiceClient iServiceAccessAnotherServiceClient;
 	
 	private static Logger log = Logger.getLogger(TestController.class);
 	
@@ -112,11 +114,11 @@ public class TestController {
 					System.out.println("Service User Authentication failed");
 				}
 				
-				//Sending data from app to service
+				//Testing UserAccessServiceRequest
 				Map<String, String> data = new HashMap<>();
 				data.put("test", "testValue");
 				log.debug("Access Service Security Service Ticket for APP");
-				data = accessServiceClientImpl.accessService("http://localhost:8080/service/orange/test123/restservice/", RequestMethod.POST_REQUEST_METHOD, 
+				data = iUserAccessServiceClient.accessService("http://localhost:8080/service/orange/test123/restservice/", RequestMethod.POST_REQUEST_METHOD, 
 						ContentType.APPLICATION_JSON, appServiceSession, serviceTicket.getServiceSessionID(), 
 						appServiceSession.findActiveUserServiceSessionByUsername("Sam.Bolt@gmail.com"), data);
 				//Looping through the response data
@@ -124,9 +126,25 @@ public class TestController {
 				String skey = null;
 				while(iterator.hasNext()){
 					skey = iterator.next();
-					System.out.println("Service Response Data Key: "+skey+" :: Value: "+data.get(skey));
+					System.out.println("User Access Service Response Data Key: "+skey+" :: Value: "+data.get(skey));
 				}
-				return "redirect:http://www.google.com";
+				
+				//
+				//Testing UserAccessServiceRequest
+				Map<String, String> appAccessRequestData = new HashMap<>();
+				appAccessRequestData.put("test", "testValue");
+				log.debug("Access Service Security Service Ticket for APP");
+				Map<String, String> appAccessResponsedata = iServiceAccessAnotherServiceClient.contactAnotherService("http://localhost:8080/service/orange/test123/app/restservice/", RequestMethod.POST_REQUEST_METHOD, 
+						ContentType.APPLICATION_JSON, serviceTicket.getServiceSessionID(), appServiceSession, appAccessRequestData);
+				//Looping through the response data
+				Iterator<String> iterator1 = appAccessResponsedata.keySet().iterator();
+				String akey = null;
+				while(iterator1.hasNext()){
+					akey = iterator1.next();
+					System.out.println("App Access Service Response Data Key: "+akey+" :: Value: "+appAccessResponsedata.get(akey));
+				}
+				
+				return "Tests were completed";
 			}
 		} catch (RestClientException e) {
 			// TODO Auto-generated catch block
@@ -134,7 +152,7 @@ public class TestController {
 			return "Message: "+e.getErrorMessage()+" Error Code: "+e.getErrorCode();
 		}
 
-		return "Tests were successfull";
+		return "Tests were completed";
 	}
 
 }

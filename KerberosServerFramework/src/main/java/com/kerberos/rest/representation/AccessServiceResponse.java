@@ -9,7 +9,7 @@ import java.util.Map;
  * @author raunak
  *
  */
-public class AccessServiceResponse extends KerberosRequestRepresentation {
+public class AccessServiceResponse {
 	
 	private String encResponseAuthenticator;
 	private Map<String, String> responseData;

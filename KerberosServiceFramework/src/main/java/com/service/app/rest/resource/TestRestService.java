@@ -19,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.service.app.rest.api.IAccessServiceAPI;
 import com.service.app.rest.representation.UserAccessServiceRequest;
 import com.service.app.rest.representation.UserAccessServiceResponse;
 import com.service.config.KerberosURLConfig;
@@ -39,6 +38,8 @@ import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.kerberos.ServiceTicket;
 import com.service.service.rest.client.IServiceAccessAnotherServiceClient;
 import com.service.service.rest.client.IServiceAppAuthenticationClient;
+import com.service.service.rest.representation.AppAccessServiceRequest;
+import com.service.service.rest.representation.AppAccessServiceResponse;
 import com.service.session.SessionManagementAPIImpl.RequestParam;
 import com.service.util.connectionmanager.ConnectionManagerImpl.ContentType;
 import com.service.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
@@ -52,7 +53,6 @@ import com.service.util.connectionmanager.ConnectionManagerImpl.RequestMethod;
 @Path("/test123/")
 public class TestRestService {
 	
-	private @Autowired IAccessServiceAPI iAccessServiceAPI;
 	
 	private @Autowired IServiceAccessAnotherServiceClient iServiceAccessAnotherServiceClient;
 	private @Autowired IKerberosAuthenticationClient iKerberosAuthenticationClient;
@@ -60,9 +60,6 @@ public class TestRestService {
 	private @Autowired IServiceAppAuthenticationClient iServiceAppAuthenticationClient;
 	private @Autowired KerberosURLConfig kerberosURLConfig;
 	
-	private String loginServerRetrieveUserInfoURL = "http://localhost:8080/login/orange/retrieve/user/information/";
-	
-
 	@Path("/restservice/")
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
@@ -98,8 +95,8 @@ public class TestRestService {
 		
 		Map<String, String> responseData1 = null;
 		try {
-			responseData1 = iServiceAccessAnotherServiceClient.contactAnotherService(loginServerRetrieveUserInfoURL, RequestMethod.POST_REQUEST_METHOD, ContentType.APPLICATION_JSON, 
-					ServiceListConfig.LOGIN_SERVER.getValue(), kerberosAppSession, serviceTicket.getServiceSessionID(), serviceTicket.getServiceSession(), requestData);
+			responseData1 = iServiceAccessAnotherServiceClient.contactAnotherService(kerberosURLConfig.getLOGIN_SERVER_RETRIEVE_USER_INFO_URL(), RequestMethod.POST_REQUEST_METHOD, ContentType.APPLICATION_JSON, 
+					ServiceListConfig.LOGIN_SERVER.getValue(), serviceTicket.getServiceSessionID(), serviceTicket.getServiceSession(), requestData);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -115,4 +112,27 @@ public class TestRestService {
 		response.setData(requestData);
 		return response;
 	}	
+	
+	@Path("/app/restservice/")
+	@POST
+	@Consumes(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.APPLICATION_JSON)
+	public AppAccessServiceResponse testAppAccessServiceRequest(AppAccessServiceRequest request, @Context HttpServletRequest httpRequest) throws UnauthenticatedAppException, UnauthenticatedUserException, AuthenticatorValidationException, IOException, RestClientException, ResponseDecryptionException, ApplicationDetailServiceUninitializedException, InternalSystemException{
+	
+		Map<String, String> decData = request.getData();
+		Iterator<String> iterator = decData.keySet().iterator();
+		String key = null;
+		while(iterator.hasNext()){
+			key = iterator.next();
+			System.out.println("Key: "+key+" :: Value: "+decData.get(key));
+		}
+		
+		Map<String, String> requestData = new HashMap<>();
+		
+		requestData.put("AppAccessServiceResponse", "Response Data");
+		
+		AppAccessServiceResponse response = new AppAccessServiceResponse();
+		response.setEncResponseData(requestData);
+		return response;
+	}
 }

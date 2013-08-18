@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.Map;
 
 import com.service.exception.common.AuthenticatorValidationException;
-import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
 import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.service.rest.representation.AppAccessServiceResponse;
@@ -19,15 +18,13 @@ import com.service.service.rest.representation.AppAccessServiceResponse;
 public interface IAppAccessServiceAPI {
 
 	/**
-	 * @param kerberosAppSession
 	 * @param serviceSessionID
 	 * @param serviceSession
 	 * @param requestAuthenticator
 	 * @param requestData
 	 * @return
 	 */
-	AppAccessServiceRequest generateAppAccessServiceRequest(
-			KerberosAppSession kerberosAppSession, String serviceSessionID,
+	AppAccessServiceRequest generateAppAccessServiceRequest( String serviceSessionID,
 			ServiceSession serviceSession, Date requestAuthenticator,
 			Map<String, String> requestData);
 

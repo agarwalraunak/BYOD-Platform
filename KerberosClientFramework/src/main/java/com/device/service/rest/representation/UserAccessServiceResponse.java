@@ -5,13 +5,11 @@ package com.device.service.rest.representation;
 
 import java.util.Map;
 
-import com.device.rest.representation.KerberosRequestRepresentation;
-
 /**
  * @author raunak
  *
  */
-public class UserAccessServiceResponse extends KerberosRequestRepresentation {
+public class UserAccessServiceResponse  {
 	
 	private String encAuthenticator;				//Encrypted with User Session ID
 	private Map<String, String> data;			//Encrypted with User Session ID

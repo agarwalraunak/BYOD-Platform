@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 import com.service.config.applicationdetailservice.ApplicationDetailService;
 import com.service.exception.common.AuthenticatorValidationException;
 import com.service.model.SessionDirectory;
-import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
 import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.service.rest.representation.AppAccessServiceResponse;
@@ -37,12 +36,12 @@ public class AppAccessServiceAPIImpl implements IAppAccessServiceAPI{
 	private @Autowired IDateUtil iDateUtil;
 	
 	@Override
-	public AppAccessServiceRequest generateAppAccessServiceRequest(KerberosAppSession kerberosAppSession, String serviceSessionID, ServiceSession serviceSession,
+	public AppAccessServiceRequest generateAppAccessServiceRequest(String serviceSessionID, ServiceSession serviceSession,
 			Date requestAuthenticator, Map<String, String> requestData){
 		
 		log.debug("Entering generateAppAccessServiceRequest");
 		
-		if (kerberosAppSession == null || serviceSession== null || serviceSessionID == null || requestAuthenticator == null){
+		if (serviceSession== null || serviceSessionID == null || requestAuthenticator == null){
 			return null;
 		}
 		

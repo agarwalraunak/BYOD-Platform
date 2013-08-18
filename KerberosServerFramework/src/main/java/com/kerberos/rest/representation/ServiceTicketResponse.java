@@ -7,7 +7,7 @@ package com.kerberos.rest.representation;
  * @author raunak
  *
  */
-public class ServiceTicketResponse extends KerberosRequestRepresentation {
+public class ServiceTicketResponse  {
 
 	private String encServiceTicket;
 	private String encServiceSessionID;

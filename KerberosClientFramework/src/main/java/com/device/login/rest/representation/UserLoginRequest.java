@@ -1,8 +1,7 @@
 package com.device.login.rest.representation;
 
-import com.device.rest.representation.KerberosRequestRepresentation;
 
-public class UserLoginRequest extends KerberosRequestRepresentation {
+public class UserLoginRequest  {
 	
 	private String encUsername;			//Encrypted using app session id
 	private String encPassword;			//Encrypted using app session id

@@ -7,7 +7,7 @@ package com.kerberos.rest.representation;
  * @author raunak
  *
  */
-public class AuthenticationRequest extends KerberosRequestRepresentation {
+public class AuthenticationRequest {
 
 	private String loginName;
 	private boolean isApplication;

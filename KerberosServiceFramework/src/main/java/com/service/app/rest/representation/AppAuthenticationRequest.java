@@ -1,8 +1,7 @@
 package com.service.app.rest.representation;
 
-import com.service.rest.representation.KerberosRequestRepresentation;
 
-public class AppAuthenticationRequest extends KerberosRequestRepresentation {
+public class AppAuthenticationRequest  {
 
 	private String serviceTicketPacket;
 	private String encAuthenticator;			//Encrypted with Kerberos Service Session ID

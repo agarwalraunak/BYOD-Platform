@@ -21,12 +21,14 @@ import com.service.app.rest.representation.UserServiceAuthenticationRequest;
 import com.service.exception.common.AppSessionExpiredException;
 import com.service.exception.common.AuthenticatorValidationException;
 import com.service.exception.common.InternalSystemException;
+import com.service.exception.common.InvalidRequestException;
 import com.service.exception.common.UnauthenticatedAppException;
 import com.service.exception.common.UnauthenticatedUserException;
 import com.service.exception.common.UserSessionExpiredException;
 import com.service.model.SessionDirectory;
 import com.service.model.app.AppSession;
 import com.service.model.app.UserSession;
+import com.service.service.rest.representation.AppAccessServiceRequest;
 import com.service.util.connectionmanager.IConnectionManager;
 import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerRequestFilter;
@@ -90,11 +92,36 @@ public class SessionManagementRequestFilter implements  ContainerRequestFilter {
 			//Set Http Request 
 			iSessionManagementAPI.addAttributesToRequest(httpRequest, validatedRequest);
 		}
+		else if ((unknownRestRequest = iSessionManagementAPI.identifyRequest(entityString, AppAccessServiceRequest.class)) != null){
+			
+			AppAccessServiceRequest accessRequest = (AppAccessServiceRequest) unknownRestRequest;
+			AppAccessServiceRequest validatedRequest = null;
+			try {
+				validatedRequest = iSessionManagementAPI.validateAppAccessServiceRequest(accessRequest);
+			} catch (UnauthenticatedAppException | UnauthenticatedUserException
+					| AuthenticatorValidationException e) {
+				throw iSessionManagementAPI.createWebApplicationException(e);
+			}
+			
+			AppSession appSession = sessionDirectory.findActiveAppSessionByAppID(validatedRequest.getAppID());
+			//Valdiate the App and User Session and record the enteries
+			try {
+				iSessionManagementAPI.manageAppSession(appSession, request.getPath(), validatedRequest.getEncAuthenticator(), httpRequest.getRemoteAddr());
+			} catch (AppSessionExpiredException | UserSessionExpiredException e) {
+				throw iSessionManagementAPI.createWebApplicationException(e);
+			}
+
+			validatedRequestString = iConnectionManager.generateJSONStringForObject(validatedRequest);
+			
+			//Set Http Request Attributes
+			iSessionManagementAPI.addAttributesToRequest(httpRequest, validatedRequest);
+		}
 		else if ((unknownRestRequest = iSessionManagementAPI.identifyRequest(entityString, UserAccessServiceRequest.class)) != null){
+			
 			UserAccessServiceRequest accessRequest = (UserAccessServiceRequest) unknownRestRequest;
 			UserAccessServiceRequest validatedRequest = null;
 			try {
-				validatedRequest = iSessionManagementAPI.validateAccessServiceRequest(accessRequest);
+				validatedRequest = iSessionManagementAPI.validateUserAccessServiceRequest(accessRequest);
 			} catch (UnauthenticatedAppException | UnauthenticatedUserException
 					| AuthenticatorValidationException e) {
 				throw iSessionManagementAPI.createWebApplicationException(e);
@@ -114,6 +141,9 @@ public class SessionManagementRequestFilter implements  ContainerRequestFilter {
 			
 			//Set Http Request Attributes
 			iSessionManagementAPI.addAttributesToRequest(httpRequest, validatedRequest);
+		}
+		else{
+			iSessionManagementAPI.createWebApplicationException(new InvalidRequestException());
 		}
 		
 		

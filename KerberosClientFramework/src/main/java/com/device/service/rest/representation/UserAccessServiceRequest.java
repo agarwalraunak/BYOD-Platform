@@ -2,9 +2,7 @@ package com.device.service.rest.representation;
 
 import java.util.Map;
 
-import com.device.rest.representation.KerberosRequestRepresentation;
-
-public class UserAccessServiceRequest extends KerberosRequestRepresentation {
+public class UserAccessServiceRequest {
 	
 	private String appID;					//App Username
 	private String encAuthenticator; 	//Encrypted using App Session ID

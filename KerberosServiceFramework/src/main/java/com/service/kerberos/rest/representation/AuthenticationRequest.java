@@ -3,13 +3,12 @@
  */
 package com.service.kerberos.rest.representation;
 
-import com.service.rest.representation.KerberosRequestRepresentation;
 
 /**
  * @author raunak
  *
  */
-public class AuthenticationRequest extends KerberosRequestRepresentation {
+public class AuthenticationRequest  {
 
 	private String loginName;
 	private boolean isApplication;

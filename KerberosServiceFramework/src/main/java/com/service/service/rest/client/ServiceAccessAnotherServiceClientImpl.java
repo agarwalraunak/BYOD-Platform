@@ -18,7 +18,6 @@ import com.service.exception.common.AuthenticatorValidationException;
 import com.service.exception.common.InternalSystemException;
 import com.service.kerberos.rest.client.IKerberosAuthenticationClient;
 import com.service.kerberos.rest.client.IKerberosServiceTicketClient;
-import com.service.model.kerberos.KerberosAppSession;
 import com.service.model.service.ServiceSession;
 import com.service.service.rest.api.IAppAccessServiceAPI;
 import com.service.service.rest.representation.AppAccessServiceRequest;
@@ -45,12 +44,12 @@ public class ServiceAccessAnotherServiceClientImpl implements IServiceAccessAnot
 	private @Autowired IConnectionManager iConnectionManager;
 	
 	@Override
-	public Map<String, String> contactAnotherService(String url, RequestMethod requestMethod, ContentType contentType, String serviceName, KerberosAppSession kerberosAppSession, String serviceSessionID,
+	public Map<String, String> contactAnotherService(String url, RequestMethod requestMethod, ContentType contentType, String serviceName, String serviceSessionID,
 			ServiceSession serviceSession, Map<String, String> requestData) throws IOException, AuthenticatorValidationException, InternalSystemException{
 		
 		log.debug("Entering contactAnotherService");
 		
-		if (url == null || url.isEmpty() || requestMethod == null || contentType == null || serviceName == null || serviceName.isEmpty() || kerberosAppSession == null 
+		if (url == null || url.isEmpty() || requestMethod == null || contentType == null || serviceName == null || serviceName.isEmpty() 
 				|| serviceSessionID == null || serviceSessionID.isEmpty() || serviceSession == null){
 			
 			log.error("Invalid Input parameter provided to contactAnotherService");
@@ -59,7 +58,7 @@ public class ServiceAccessAnotherServiceClientImpl implements IServiceAccessAnot
 		
 		Date requestAuthenticator = serviceSession.createAuthenticator();
 		
-		AppAccessServiceRequest request = iAppAccessServiceAPI.generateAppAccessServiceRequest(kerberosAppSession, serviceSessionID, serviceSession, requestAuthenticator, requestData);
+		AppAccessServiceRequest request = iAppAccessServiceAPI.generateAppAccessServiceRequest(serviceSessionID, serviceSession, requestAuthenticator, requestData);
 		
 		AppAccessServiceResponse response;
 		try {

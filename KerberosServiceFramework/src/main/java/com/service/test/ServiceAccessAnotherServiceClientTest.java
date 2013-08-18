@@ -62,7 +62,7 @@ public class ServiceAccessAnotherServiceClientTest {
 		Map<String, String> responseData = null;
 		try {
 			responseData = iServiceAccessAnotherServiceClient.contactAnotherService(loginServerRetrieveUserInfoURL, RequestMethod.POST_REQUEST_METHOD, ContentType.APPLICATION_JSON, 
-					ServiceListConfig.LOGIN_SERVER.getValue(), kerberosAppSession, serviceTicket.getServiceSessionID(), serviceTicket.getServiceSession(), requestData);
+					ServiceListConfig.LOGIN_SERVER.getValue(), serviceTicket.getServiceSessionID(), serviceTicket.getServiceSession(), requestData);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

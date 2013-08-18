@@ -3,13 +3,11 @@
  */
 package com.device.kerberos.rest.representation;
 
-import com.device.rest.representation.KerberosRequestRepresentation;
-
 /**
  * @author raunak
  *
  */
-public class AuthenticationResponse extends KerberosRequestRepresentation {
+public class AuthenticationResponse  {
 	
 	private String encTgtPacket;	//TGTPacket = loginName,sessionkey,expiryTimeStamp
 	private String encSessionKey;

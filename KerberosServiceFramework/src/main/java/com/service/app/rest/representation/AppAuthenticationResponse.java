@@ -3,13 +3,12 @@
  */
 package com.service.app.rest.representation;
 
-import com.service.rest.representation.KerberosRequestRepresentation;
 
 /**
  * @author raunak
  *
  */
-public class AppAuthenticationResponse extends KerberosRequestRepresentation {
+public class AppAuthenticationResponse  {
 	
 	private String encAppSessionID;					//Encrypted with Service Key
 	private String encResponseAuthenticator; 	//Encrypted using Kerberos Service Session ID

@@ -22,7 +22,6 @@ import com.login.exception.common.InternalSystemException;
 import com.login.exception.common.InvalidRequestException;
 import com.login.exception.common.UnauthenticatedAppException;
 import com.login.exception.common.UserDoesNotExistException;
-import com.login.service.rest.api.IAppAccessServiceAPI;
 import com.login.service.rest.representation.AppAccessServiceRequest;
 import com.login.service.rest.representation.AppAccessServiceResponse;
 import com.login.util.ActiveDirectory.IActiveDirectory;
@@ -37,7 +36,6 @@ public class RetrieveUserInformationRestService {
 	
 	private static Logger log = Logger.getLogger(RetrieveUserInformationRestService.class);
 	
-	private @Autowired IAppAccessServiceAPI iAppAccessServiceAPI;
 	private @Autowired IActiveDirectory iActiveDirectory;
 	
 	@POST
@@ -48,7 +46,7 @@ public class RetrieveUserInformationRestService {
 		
 		log.debug("Entering getUserInformation");
 		
-		Map<String, String> requestData = request.getData(); //iAppAccessServiceAPI.processAppAccessServiceRequest(request);
+		Map<String, String> requestData = request.getData();
 		
 		String username = requestData.get("uid");
 		String retrieveAttributes = requestData.get("RETRIEVE_ATTRIBUTES");
@@ -74,7 +72,6 @@ public class RetrieveUserInformationRestService {
 		AppAccessServiceResponse response = new AppAccessServiceResponse();
 		response.setEncResponseData(userInfo);
 		return response;
-//		return iAppAccessServiceAPI.generateAppAccessServiceResponse(request, userInfo);
 	}
 
 }

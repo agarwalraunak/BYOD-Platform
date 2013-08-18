@@ -1,9 +1,10 @@
 package com.service.model.app;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+
+import com.service.config.SessionConfig;
 
 public class AppSession extends ClientSession{
 	
@@ -13,10 +14,7 @@ public class AppSession extends ClientSession{
 	public AppSession() {
 		super();
 		userSessions = new ArrayList<UserSession>();
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(new Date());
-		calendar.add(Calendar.MINUTE, 2);
-		expiryTime = calendar.getTime();
+		expiryTime = SessionConfig.getAppSessionExpiryTime();
 	}
 	/**
 	 * @return the userSession

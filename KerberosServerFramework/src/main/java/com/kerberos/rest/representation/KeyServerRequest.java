@@ -8,7 +8,7 @@ package com.kerberos.rest.representation;
  * @author raunak
  *
  */
-public class KeyServerRequest extends KerberosRequestRepresentation {
+public class KeyServerRequest  {
 
 	private String keyType;
 	private String encServiceTicket;
