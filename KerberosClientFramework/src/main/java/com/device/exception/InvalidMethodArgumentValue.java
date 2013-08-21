@@ -4,6 +4,8 @@
 package com.device.exception;
 
 /**
+ * Runtime Exception sub class thrown when Incorrect Valued Arguments are passed to methods
+ * 
  * @author raunak
  *
  */

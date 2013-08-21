@@ -4,6 +4,8 @@
 package com.device.error;
 
 /**
+ * This model is used to capture the error given out by the Server end
+ * 
  * @author raunak
  *
  */
@@ -14,7 +16,7 @@ public class ErrorResponse {
 
 	
 	/**
-	 * @return the errorMessage
+	 * @return the errorMessage returned by the server
 	 */
 	public String getErrorMessage() {
 		return errorMessage;
@@ -28,7 +30,7 @@ public class ErrorResponse {
 	}
 
 	/**
-	 * @return the errorId
+	 * @return the Status Code of the error resposne
 	 */
 	public int getErrorId() {
 		return errorId;

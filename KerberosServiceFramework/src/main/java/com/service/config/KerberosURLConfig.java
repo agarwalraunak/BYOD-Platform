@@ -41,7 +41,7 @@ public class KerberosURLConfig {
 
 
 	/**
-	 * @return the kERBEROS_APP_AUTHENTICATION_URL
+	 * @return Configured KERBEROS_APP_AUTHENTICATION_URL
 	 */
 	public String getKERBEROS_APP_AUTHENTICATION_URL() {
 		return KERBEROS_APP_AUTHENTICATION_URL;
@@ -49,7 +49,7 @@ public class KerberosURLConfig {
 
 
 	/**
-	 * @return the kERBEROS_APP_SERVICE_TICKET_REQUEST_URL
+	 * @return Configured KERBEROS_APP_SERVICE_TICKET_REQUEST_URL
 	 */
 	public String getKERBEROS_APP_SERVICE_TICKET_REQUEST_URL() {
 		return KERBEROS_APP_SERVICE_TICKET_REQUEST_URL;
@@ -57,7 +57,7 @@ public class KerberosURLConfig {
 
 
 	/**
-	 * @return the kERBEROS_KEY_SERVER_KEY_REQUEST_URL
+	 * @return Configured KERBEROS_KEY_SERVER_KEY_REQUEST_URL
 	 */
 	public String getKERBEROS_KEY_SERVER_KEY_REQUEST_URL() {
 		return KERBEROS_KEY_SERVER_KEY_REQUEST_URL;
@@ -65,7 +65,7 @@ public class KerberosURLConfig {
 
 
 	/**
-	 * @return the kERBEROS_LOGIN_SERVER_APP_AUTHENTICATION_URL
+	 * @return Configured KERBEROS_LOGIN_SERVER_APP_AUTHENTICATION_URL
 	 */
 	public String getLOGIN_SERVER_APP_AUTHENTICATION_URL() {
 		return LOGIN_SERVER_APP_AUTHENTICATION_URL;
@@ -73,14 +73,14 @@ public class KerberosURLConfig {
 
 
 	/**
-	 * @return
+	 * @return Configured LOGIN_SERVER_USER_AUTHENTICATION_URL
 	 */
 	public String getLOGIN_SERVER_USER_AUTHENTICATION_URL() {
 		return LOGIN_SERVER_USER_AUTHENTICATION_URL;
 	}
 
 	/**
-	 * @return the lOGIN_SERVER_RETRIEVE_USER_INFO_URL
+	 * @return Configure LOGIN_SERVER_RETRIEVE_USER_INFO_URL
 	 */
 	public String getLOGIN_SERVER_RETRIEVE_USER_INFO_URL() {
 		return LOGIN_SERVER_RETRIEVE_USER_INFO_URL;

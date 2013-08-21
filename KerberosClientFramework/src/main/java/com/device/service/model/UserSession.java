@@ -44,6 +44,10 @@ public class UserSession {
 		this.expiryTime = expiryTime;
 	}
 
+	
+	public boolean getIsActive(){
+		return isActive;
+	}
 	/**
 	 * @return the isActive
 	 */

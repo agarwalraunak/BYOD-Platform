@@ -30,7 +30,6 @@ public class RestException extends Exception{
 	public String getMessage() {
 		return message;
 	}
-
 	/**
 	 * @return the errorID
 	 */

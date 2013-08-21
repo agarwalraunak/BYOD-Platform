@@ -6,6 +6,8 @@ package com.device.exception;
 import com.device.error.ErrorResponse;
 
 /**
+ * Thrown in case if there is error encountered on the Server side
+ * 
  * @author raunak
  *
  */
@@ -24,13 +26,13 @@ public class RestClientException extends Exception{
 		this.errorMessage = errorResponse.getErrorMessage();
 	}
 	/**
-	 * @return the errorMessage
+	 * @return the errorMessage from the server side
 	 */
 	public String getErrorMessage() {
 		return errorMessage;
 	}
 	/**
-	 * @return the errorCode
+	 * @return the response status code as given by the server side
 	 */
 	public int getErrorCode() {
 		return errorCode;

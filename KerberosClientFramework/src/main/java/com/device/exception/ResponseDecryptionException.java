@@ -4,6 +4,8 @@
 package com.device.exception;
 
 /**
+ * Thrown if the decryption of the Response Fails
+ * 
  * @author raunak
  *
  */

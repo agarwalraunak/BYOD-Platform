@@ -65,6 +65,19 @@ public class TGT {
 	
 	/**
 	 * @param serviceSessionID
+	 * @return
+	 */
+	public ServiceTicket findServiceTicketByServiceSessionID(String serviceSessionID){
+		for (ServiceTicket ticket : serviceTickets.values()){
+			if (ticket.getServiceSessionID().equals(serviceSessionID)){
+				return ticket;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * @param serviceSessionID
 	 * @param encServiceTicket
 	 * @param serviceName
 	 * @param expiryTime

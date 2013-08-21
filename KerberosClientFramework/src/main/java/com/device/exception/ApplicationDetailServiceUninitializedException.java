@@ -3,7 +3,9 @@
  */
 package com.device.exception;
 
-/**
+/*
+ * This exception is thrown when the Application Detail Service bean has not been configured properly
+ * 
  * @author raunak
  *
  */

@@ -34,6 +34,10 @@ public class AppSession {
 		authenticators = new LinkedList<>();
 	}
 	
+	public boolean getIsActive(){
+		return isActive;
+	}
+	
 	/**
 	 * @return the isActive
 	 */
@@ -86,7 +90,7 @@ public class AppSession {
 	/**
 	 * @return the userServiceSessions
 	 */
-	public List<UserSession> getUserServiceSessions() {
+	public List<UserSession> getUserSessions() {
 		return userSessions;
 	}
 	

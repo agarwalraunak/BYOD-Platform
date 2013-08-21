@@ -46,6 +46,13 @@ public class SessionDirectory {
 	}
 
 	/**
+	 * @return the appSessionDirectory
+	 */
+	public Map<String, AppSession> getAppSessionDirectory() {
+		return appSessionDirectory;
+	}
+
+	/**
 	 * @param sessionID
 	 * @param TGTPacket
 	 * @return

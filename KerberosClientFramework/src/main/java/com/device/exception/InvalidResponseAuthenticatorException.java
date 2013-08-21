@@ -4,6 +4,8 @@
 package com.device.exception;
 
 /**
+ * Thrown if the <strong>Response Authenticator</strong> fails to validate
+ * 
  * @author raunak
  *
  */

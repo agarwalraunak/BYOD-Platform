@@ -25,7 +25,7 @@ public class ApplicationDetailService {
 	}
 	
 	/**
-	 * @return the appLoginName
+	 * @return Configured App Login Name
 	 */
 	public String getAppLoginName() {
 		return appLoginName;
@@ -33,7 +33,7 @@ public class ApplicationDetailService {
 
 
 	/**
-	 * @return the appPassword
+	 * @return Configured App Password
 	 */
 	public String getAppPassword() {
 		return appPassword;

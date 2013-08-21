@@ -11,12 +11,17 @@ import com.device.service.model.UserSession;
 
 
 /**
+ * This class models the Session created by <strong>Kerberos</strong> after authentication
+ * 
  * @author raunak
  *
  */
 public class KerberosAppSession {
 	
 	private String sessionID;
+	/**
+	 * <code>TGT</code> for which the Kerberos App Session is created
+	 */
 	private TGT tgt;
 	private Date created;
 	private boolean isActive;
@@ -78,6 +83,10 @@ public class KerberosAppSession {
 		this.created = created;
 	}
 	
+	/**
+	 * 
+	 * @param <code>AppSession</code> Deactivates the AppSession by setting the Active Flag to false
+	 */
 	public void deactiveAppSession(AppSession appSession){
 		
 		Iterator<String> iterator = tgt.getServiceTickets().keySet().iterator();
@@ -90,6 +99,9 @@ public class KerberosAppSession {
 		}
 	}
 	
+	/**
+	 * @param <code>UserSession</code> deactivates the passed in User Session
+	 */
 	public void deactivateUserSession(UserSession userSession){
 		Iterator<String> iterator = tgt.getServiceTickets().keySet().iterator();
 		ServiceTicket ticket = null;

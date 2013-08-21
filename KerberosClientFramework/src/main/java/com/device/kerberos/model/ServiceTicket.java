@@ -8,14 +8,28 @@ import java.util.Date;
 import com.device.service.model.AppSession;
 
 /**
+ * This model stores the <strong>Kerberos Service Ticket</strong> 
+ * 
  * @author raunak
  *
  */
 public class ServiceTicket {
 	
 	private String serviceSessionID;
-	private String encServiceTicket;	//username,serviceSessionID,serviceTicketExpiryString
+	/**
+	 * Contains of the service ticket are "username,serviceSessionID,serviceTicketExpiryString"
+	 * The ticket is encrypted with the <code>SecretKey</code> of the Service for which the ticket
+	 * was issued
+	 */
+	private String encServiceTicket;
+	/**
+	 * Service UID as given in the Directory
+	 */
 	private String serviceName;
+	/**
+	 * <strong>App Session</strong> created after the <code>ServiceTicket</code> authentication by the 
+	 * <strong>Service</strong> 
+	 */
 	private AppSession appSession;
 	private Date created;
 	private Date expiryTime;
@@ -28,8 +42,13 @@ public class ServiceTicket {
 		this.expiryTime = expiryTime;
 	}
 	
+	public AppSession getAppSession(){
+		return appSession;
+	}
+	
 	/**
-	 * @return the appSession
+	 * @return 
+	 * <code>AppSession</code> or null if the AppSession has expired
 	 */
 	public AppSession getActiveAppSession() {
 		if (appSession != null && appSession.isActive()){
@@ -78,6 +97,12 @@ public class ServiceTicket {
 		return created;
 	}
 	
+	/**
+	 * @param <code>String</code> Kerberos App Session ID
+	 * @param <code>Date</code> expiry time of the AppSession
+	 * @return
+	 * <code>AppSession</code>
+	 */
 	public AppSession createAppServiceSession(String appSessionID, Date expiryTime){
 		
 		appSession = new AppSession();

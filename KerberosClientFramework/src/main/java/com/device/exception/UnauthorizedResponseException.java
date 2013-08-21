@@ -4,6 +4,8 @@
 package com.device.exception;
 
 /**
+ * Thrown in case the decryption of the Response attributes fails or response is not valid
+ * 
  * @author raunak
  *
  */
